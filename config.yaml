@@ -1,0 +1,28 @@
+server:
+  port: 9003
+
+database:
+  host: localhost
+  port: 3306
+  user: root
+  password: password
+  dbname: tp_music
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: ""
+  db: 0
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: root
+  secret-key: 123456789
+  bucket-name: user01
+
+mail:
+  host: smtp.163.com
+  port: 465
+  username: ""
+  password: ""
+  address: ""

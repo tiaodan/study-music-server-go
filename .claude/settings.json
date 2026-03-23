@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mysql -h localhost -P 3306 -u root -ppassword tp_music -e \"SHOW CREATE TABLE song\\\\G\")"
+    ]
+  }
+}
