@@ -286,6 +286,13 @@ func (s *SongService) SongOfId(id uint) *common.Response {
 	return common.SuccessWithData("获取成功", song)
 }
 
+// AlbumWithSongs 按专辑分组的结构
+type AlbumWithSongs struct {
+	AlbumId   uint           `json:"album_id"`
+	Album     string         `json:"album"`
+	Songs     []models.Song `json:"songs"`
+}
+
 func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 	// 通过中间表查询该歌手的所有歌曲
 	songSingers, err := s.songSingerMapper.FindBySingerId(singerId)
@@ -300,7 +307,7 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 	}
 
 	if len(songIds) == 0 {
-		return common.SuccessWithData("获取成功", []models.Song{})
+		return common.SuccessWithData("获取成功", []AlbumWithSongs{})
 	}
 
 	// 查询歌曲详情
@@ -314,11 +321,18 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 	for i := range songs {
 		songs[i].Url = fmt.Sprintf("/song/%d", songs[i].ID)
 
-		// 填充专辑名
-		if songs[i].AlbumId != nil {
+		// 填充专辑名：优先从 album_id 查表，其次从 nas_url_path 解析
+		if songs[i].AlbumId != nil && *songs[i].AlbumId > 0 {
 			album, err := s.albumMapper.FindById(*songs[i].AlbumId)
 			if err == nil && album != nil {
 				songs[i].Album = album.Name
+			}
+		}
+		// 如果专辑名仍为空，从 nas_url_path 解析（如：周杰伦/哎呦，不错哦/歌曲.mp3）
+		if songs[i].Album == "" && songs[i].NasUrlPath != "" {
+			parts := strings.Split(songs[i].NasUrlPath, "/")
+			if len(parts) >= 2 {
+				songs[i].Album = parts[1] // 第二个是专辑名
 			}
 		}
 	}
@@ -331,7 +345,34 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 		}
 	}
 
-	return common.SuccessWithData("获取成功", songs)
+	// 按专辑名分组（使用专辑名作为key，而不是albumId）
+	albumMap := make(map[string]*AlbumWithSongs)
+	var result []AlbumWithSongs
+
+	for i := range songs {
+		song := songs[i]
+		// 使用专辑名作为分组key，如果为空则用"未知专辑"
+		albumName := song.Album
+		if albumName == "" {
+			albumName = "未知专辑"
+		}
+
+		if _, exists := albumMap[albumName]; !exists {
+			var albumId uint = 0
+			if song.AlbumId != nil {
+				albumId = *song.AlbumId
+			}
+			albumMap[albumName] = &AlbumWithSongs{
+				AlbumId: albumId,
+				Album:   albumName,
+				Songs:   []models.Song{},
+			}
+			result = append(result, *albumMap[albumName])
+		}
+		albumMap[albumName].Songs = append(albumMap[albumName].Songs, song)
+	}
+
+	return common.SuccessWithData("获取成功", result)
 }
 
 func (s *SongService) SongOfName(name string) *common.Response {
