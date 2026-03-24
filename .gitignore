@@ -1,1 +1,5 @@
 .vscode
+/sql/bak/*.sql
+
+# 日志
+/logout/*.log

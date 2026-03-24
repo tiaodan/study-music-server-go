@@ -2,15 +2,38 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"study-music-server-go/config"
 	"study-music-server-go/mapper"
 	"study-music-server-go/routes"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	// 创建日志目录
+	logDir := "./logout"
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		log.Fatalf("Failed to create log directory: %v", err)
+	}
+
+	// 创建日志文件
+	logFile := filepath.Join(logDir, fmt.Sprintf("app_%s.log", time.Now().Format("20060102")))
+	file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer file.Close()
+
+	// 设置日志同时输出到控制台和文件
+	multiWriter := io.MultiWriter(os.Stdout, file)
+	log.SetOutput(multiWriter)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	// Load configuration
 	cfg, err := config.LoadConfig("config.yaml")
 	if err != nil {

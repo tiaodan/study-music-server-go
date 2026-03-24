@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"study-music-server-go/common"
@@ -10,6 +11,10 @@ import (
 	"study-music-server-go/models"
 	"study-music-server-go/utils"
 	"strings"
+	"unicode/utf8"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 type ImportService struct {
@@ -17,6 +22,29 @@ type ImportService struct {
 	albumMapper      *mapper.AlbumMapper
 	songMapper       *mapper.SongMapper
 	songSingerMapper *mapper.SongSingerMapper
+}
+
+// readLrcFile 读取 lrc 文件，自动检测并转换编码（GBK -> UTF-8）
+func readLrcFile(path string) (string, error) {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	// 使用 Go 自带的 utf8.Valid 检测是否为有效的 UTF-8
+	if utf8.Valid(content) {
+		return string(content), nil
+	}
+
+	// UTF-8 无效，尝试 GBK 解码
+	decoder := simplifiedchinese.GBK.NewDecoder()
+	result, _, err := transform.Bytes(decoder, content)
+	if err != nil {
+		// 如果转换失败，返回原始内容
+		return string(content), nil
+	}
+
+	return string(result), nil
 }
 
 func NewImportService() *ImportService {
@@ -101,6 +129,7 @@ func normalizeSMBPath(path string) string {
 
 // splitPathParts 分割路径，获取歌手名和专辑名
 // 支持普通路径和SMB路径
+// 注意：路径最后是专辑名，前一位是歌手名
 func splitPathParts(path string) (singerName, albumName string) {
 	// 先标准化SMB路径
 	path = normalizeSMBPath(path)
@@ -124,11 +153,25 @@ func splitPathParts(path string) (singerName, albumName string) {
 		}
 	}
 
+	// 检测UNC路径（\\server\share），跳过服务器名和共享名
+	// UNC路径格式：\\server\share\path1\path2
+	if len(parts) > startIdx+2 {
+		// 检查是否是UNC路径（开头是 \\ 或 //）
+		if (len(path) >= 2 && path[0] == '\\' && path[1] == '\\') ||
+			(len(path) >= 2 && path[0] == '/' && path[1] == '/') {
+			// UNC路径：跳过 server 和 share，取后面的路径
+			startIdx = startIdx + 2
+		}
+	}
+
+	log.Printf("splitPathParts: path=%s, parts=%v, startIdx=%d", path, parts, startIdx)
+
 	if len(parts)-startIdx >= 2 {
 		albumName = parts[len(parts)-1]
 		singerName = parts[len(parts)-2]
 	}
 
+	log.Printf("splitPathParts result: singerName=%s, albumName=%s", singerName, albumName)
 	return singerName, albumName
 }
 
@@ -161,15 +204,16 @@ func (s *ImportService) MoveFile(from, to string) *common.Response {
 		return common.Error("目录中没有音乐文件")
 	}
 
-	// 解析源路径，获取歌手名和专辑名
+	// 解析源路径，获取歌手名和专辑名（用于构建 NAS URL）
 	singerName, albumName := splitPathParts(from)
 
 	if singerName == "" || albumName == "" {
 		return common.Error("无法从路径中解析歌手名和专辑名，请确保路径格式为：根目录/歌手名/专辑名/")
 	}
 
-	// 构建目标目录
-	targetDir := buildTargetPath(to, singerName, albumName)
+	// 目标路径直接使用（用户填的就是完整路径：\\server\share\歌手\专辑）
+	// 统一路径分隔符
+	targetDir := strings.Replace(to, "/", "\\", -1)
 
 	// 创建目标目录
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
@@ -240,6 +284,10 @@ func (s *ImportService) MoveFile(from, to string) *common.Response {
 		"album":      albumName,
 		"target_dir": targetDir,
 	}
+
+	// 移动成功后，自动入库
+	importResult := s.ImportSongs(targetDir)
+	result["import_result"] = importResult.Data
 
 	return common.SuccessWithData("移动成功", result)
 }
@@ -392,13 +440,20 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 
 		// 读取同名lrc文件作为歌词
 		lrcPath := strings.TrimSuffix(file.Path, file.Ext) + ".lrc"
-		if lrcContent, err := ioutil.ReadFile(lrcPath); err == nil {
+		fmt.Printf("检查歌词文件: %s\n", lrcPath)
+		if lrcContent, err := readLrcFile(lrcPath); err == nil {
+			fmt.Printf("找到歌词文件: %s, 大小: %d bytes\n", lrcPath, len(lrcContent))
 			// 找到歌曲，更新歌词
 			foundSong, err := s.songMapper.FindByName(song.Name)
 			if err == nil && len(foundSong) > 0 {
 				foundSong[0].Lyric = string(lrcContent)
 				s.songMapper.Update(&foundSong[0])
+				fmt.Printf("歌词已更新到歌曲: %s\n", song.Name)
+			} else {
+				fmt.Printf("未找到歌曲: %s, err: %v\n", song.Name, err)
 			}
+		} else {
+			fmt.Printf("未找到歌词文件: %s, err: %v\n", lrcPath, err)
 		}
 
 		importedSongs = append(importedSongs, map[string]interface{}{

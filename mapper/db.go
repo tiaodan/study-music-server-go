@@ -46,5 +46,25 @@ func InitDB() error {
 	    &models.Device{},
 	)
 
+	// 自动修复字符集问题
+	fixCharset()
+
 	return nil
+}
+
+// fixCharset 修复数据库表的字符集问题
+func fixCharset() {
+	// 先修复数据库默认字符集
+	DB.Exec("ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+
+	// 修复 song 表的 lyric 字段字符集
+	DB.Exec("ALTER TABLE song CONVERT TO CHARACTER SET utf8mb4")
+	DB.Exec("ALTER TABLE song MODIFY lyric TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+
+	// 修复其他可能的中文字段
+	DB.Exec("ALTER TABLE song MODIFY name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+	DB.Exec("ALTER TABLE singer MODIFY name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+	DB.Exec("ALTER TABLE album MODIFY name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+
+	log.Println("数据库字符集已修复为 utf8mb4")
 }

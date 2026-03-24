@@ -8,11 +8,12 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	Redis    RedisConfig    `yaml:"redis"`
-	Minio    MinioConfig    `yaml:"minio"`
-	Mail     MailConfig     `yaml:"mail"`
+	Server        ServerConfig        `yaml:"server"`
+	Database      DatabaseConfig      `yaml:"database"`
+	DatabaseTest  DatabaseTestConfig  `yaml:"database_test"`
+	Redis         RedisConfig         `yaml:"redis"`
+	Minio         MinioConfig         `yaml:"minio"`
+	Mail          MailConfig          `yaml:"mail"`
 }
 
 type ServerConfig struct {
@@ -20,6 +21,14 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	DBName   string `yaml:"dbname"`
+}
+
+type DatabaseTestConfig struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
 	User     string `yaml:"user"`
@@ -50,6 +59,11 @@ type MailConfig struct {
 }
 
 func (d *DatabaseConfig) DSN() string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		d.User, d.Password, d.Host, d.Port, d.DBName)
+}
+
+func (d *DatabaseTestConfig) DSN() string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		d.User, d.Password, d.Host, d.Port, d.DBName)
 }

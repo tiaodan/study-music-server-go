@@ -45,7 +45,9 @@ func (s *SongService) checkUrlAccessible(url string) bool {
 	if isLocalPath {
 		// 本地路径/SMB路径：直接检查文件是否存在
 		// UNC路径如 \\100.86.118.11\hdd 直接使用
-		_, err := os.Stat(url)
+		// 统一路径分隔符，将 / 转换为 \
+		localPath := strings.Replace(url, "/", "\\", -1)
+		_, err := os.Stat(localPath)
 		if err == nil {
 			log.Printf("本地文件存在: %s", url)
 			return true

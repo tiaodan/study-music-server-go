@@ -8,6 +8,13 @@ database:
   password: password
   dbname: tp_music
 
+database_test:
+  host: localhost
+  port: 3306
+  user: root
+  password: password
+  dbname: tp_music_unit_test
+
 redis:
   host: 127.0.0.1
   port: 6379

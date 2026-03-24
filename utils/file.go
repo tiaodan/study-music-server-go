@@ -5,9 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -68,6 +71,14 @@ type MusicFileInfo struct {
 func GetMusicFiles(dirPath string) ([]MusicFileInfo, error) {
 	var files []MusicFileInfo
 
+	// 统一路径分隔符
+	dirPath = normalizePathSeparator(dirPath)
+
+	// 确保SMB连接已建立
+	if err := ensureSMBConnection(dirPath); err != nil {
+		log.Printf("SMB连接检查失败: %v", err)
+	}
+
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -123,6 +134,14 @@ func FormatMusicFileName(singer, songName, ext string) string {
 // 如果目标文件已存在且大小一致，则跳过（删除源文件）
 // 如果目标文件已存在但大小不一致，则覆盖
 func MoveFile(from, to string) error {
+	// 统一路径分隔符
+	from = normalizePathSeparator(from)
+	to = normalizePathSeparator(to)
+
+	// 确保SMB连接已建立
+	ensureSMBConnection(from)
+	ensureSMBConnection(to)
+
 	// 创建目标目录
 	toDir := filepath.Dir(to)
 	if _, err := os.Stat(toDir); os.IsNotExist(err) {
@@ -225,8 +244,65 @@ func MoveFile(from, to string) error {
 	return nil
 }
 
+// normalizePathSeparator 统一路径分隔符，将 / 转换为 \
+// Windows UNC路径要求统一用反斜杠 \
+func normalizePathSeparator(path string) string {
+	return strings.Replace(path, "/", "\\", -1)
+}
+
+// extractSMBServer 从UNC路径中提取服务器和共享文件夹
+// 例如: \\100.86.118.11\hdd -> server: 100.86.118.11, share: hdd
+func extractSMBServer(path string) (server, share string) {
+	// 匹配 \\server\share 格式
+	re := regexp.MustCompile(`^\\\\([^\\]+)\\([^\\]+)`)
+	matches := re.FindStringSubmatch(path)
+	if len(matches) == 3 {
+		return matches[1], matches[2]
+	}
+	return "", ""
+}
+
+// ensureSMBConnection 确保SMB连接已建立
+// 如果是UNC路径，先尝试建立连接（使用当前用户凭据）
+func ensureSMBConnection(path string) error {
+	server, share := extractSMBServer(path)
+	if server == "" || share == "" {
+		return nil // 不是SMB路径，无需处理
+	}
+
+	// 检查是否已经连接
+	cmd := exec.Command("net", "use")
+	output, err := cmd.CombinedOutput()
+	if err == nil {
+		// 检查是否已有该共享的连接
+		sharePath := "\\\\" + server + "\\" + share
+		if strings.Contains(string(output), sharePath) {
+			log.Printf("SMB连接已存在: %s", sharePath)
+			return nil
+		}
+	}
+
+	// 尝试使用当前用户凭据建立连接
+	log.Printf("尝试建立SMB连接: \\%s\\%s", server, share)
+	cmd = exec.Command("net", "use", "\\\\"+server+"\\"+share, "/persistent:yes")
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("SMB连接失败: %v, output: %s", err, string(output))
+		// 连接失败不返回错误，让后续操作自然失败
+		return nil
+	}
+	log.Printf("SMB连接成功: \\%s\\%s", server, share)
+	return nil
+}
+
 // FileExists 检查文件是否存在
 func FileExists(path string) bool {
+	// 统一路径分隔符
+	path = normalizePathSeparator(path)
+
+	// 确保SMB连接已建立
+	ensureSMBConnection(path)
+
 	_, err := os.Stat(path)
 	return err == nil
 }
