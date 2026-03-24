@@ -262,6 +262,11 @@ func extractSMBServer(path string) (server, share string) {
 	return "", ""
 }
 
+// EnsureSMBConnection 确保SMB连接已建立（导出版本）
+func EnsureSMBConnection(path string) error {
+	return ensureSMBConnection(path)
+}
+
 // ensureSMBConnection 确保SMB连接已建立
 // 如果是UNC路径，先尝试建立连接（使用当前用户凭据）
 func ensureSMBConnection(path string) error {

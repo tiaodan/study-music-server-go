@@ -87,7 +87,8 @@ func SetupRoutes(r *gin.Engine) {
 
 	// Import routes - 歌曲导入相关
 	importCtrl := controller.NewImportController()
-	r.POST("/import/format-name", importCtrl.FormatName)   // 名字格式化
-	r.POST("/import/move-file", importCtrl.MoveFile)       // 移动文件到HDD
-	r.POST("/import/songs", importCtrl.ImportSongs)        // 规整进数据库
+	r.POST("/import/format-name", importCtrl.FormatName)        // 名字格式化
+	r.POST("/import/move-file", importCtrl.MoveFile)             // 移动文件到HDD
+	r.POST("/import/songs", importCtrl.ImportSongs)              // 规整进数据库
+	r.POST("/import/singer/albums", importCtrl.ImportSingerAlbums) // 一键导入-单歌手-所有专辑
 }

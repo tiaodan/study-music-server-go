@@ -6,11 +6,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"study-music-server-go/common"
 	"study-music-server-go/mapper"
 	"study-music-server-go/models"
 	"study-music-server-go/utils"
-	"strings"
 	"unicode/utf8"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -99,7 +99,7 @@ func (s *ImportService) FormatName(path string) *common.Response {
 	}
 
 	result := map[string]interface{}{
-		"total":  len(files),
+		"total":   len(files),
 		"success": results,
 		"failed":  failed,
 	}
@@ -216,9 +216,11 @@ func (s *ImportService) MoveFile(from, to string) *common.Response {
 	targetDir := strings.Replace(to, "/", "\\", -1)
 
 	// 创建目标目录
+	log.Printf("创建目标目录: %s", targetDir)
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		return common.Error(fmt.Sprintf("创建目标目录失败: %v", err))
 	}
+	log.Printf("目标目录创建成功")
 
 	// 记录源文件信息（用于最后验证）
 	var srcFileSizes map[string]int64
@@ -286,6 +288,204 @@ func (s *ImportService) MoveFile(from, to string) *common.Response {
 	}
 
 	// 移动成功后，自动入库
+	importResult := s.ImportSongs(targetDir)
+	result["import_result"] = importResult.Data
+
+	return common.SuccessWithData("移动成功", result)
+}
+
+// ImportSingerAlbums 一键导入-单歌手-所有专辑
+// singerPath: 歌手目录路径，如 C:\test\周杰伦（目录下有多个专辑子目录）
+// targetPath: 目标路径，如 \\100.86.118.11\hdd\周杰伦
+func (s *ImportService) ImportSingerAlbums(singerPath, targetPath string) *common.Response {
+	// 标准化路径
+	singerPath = strings.Replace(singerPath, "/", "\\", -1)
+	targetPath = strings.Replace(targetPath, "/", "\\", -1)
+
+	// 从源路径中提取歌手名（源路径最后一级就是歌手名）
+	singerName := filepath.Base(singerPath)
+	if singerName == "." || singerName == "" {
+		return common.Error("无法从路径中提取歌手名")
+	}
+	log.Printf("ImportSingerAlbums: singerName=%s, targetPath=%s", singerName, targetPath)
+
+	// 确保SMB连接
+	utils.EnsureSMBConnection(targetPath)
+
+	// 读取源目录下的所有子目录（每个子目录是一个专辑）
+	entries, err := os.ReadDir(singerPath)
+	if err != nil {
+		return common.Error(fmt.Sprintf("读取歌手目录失败: %v", err))
+	}
+
+	var results []map[string]interface{}
+	var failed []map[string]interface{}
+	var totalSongs int
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue // 跳过文件，只处理目录
+		}
+
+		albumName := entry.Name()
+		albumPath := filepath.Join(singerPath, albumName)
+
+		// 检查专辑目录下是否有音乐文件
+		files, err := utils.GetMusicFiles(albumPath)
+		if err != nil {
+			failed = append(failed, map[string]interface{}{
+				"album": albumName,
+				"error": fmt.Sprintf("读取目录失败: %v", err),
+			})
+			continue
+		}
+
+		if len(files) == 0 {
+			continue // 跳过空目录
+		}
+
+		// 第一步：格式化文件名
+		log.Printf("格式化专辑文件名: %s", albumPath)
+		formatResult := s.FormatName(albumPath)
+		if !formatResult.Success {
+			log.Printf("格式化失败: %s", formatResult.Message)
+		}
+
+		// 构建目标完整路径：目标路径 + 专辑名
+		// 如: \\100.86.118.11\hdd\林俊杰\JJ陆
+		albumTargetPath := filepath.Join(targetPath, albumName)
+
+		// 直接移动到目标路径，传入歌手名（不再从源路径解析）
+		moveResult := s.moveFileDirect(albumPath, albumTargetPath, singerName)
+
+		if moveResult.Success {
+			totalSongs += len(files)
+			results = append(results, map[string]interface{}{
+				"album":   albumName,
+				"success": true,
+				"songs":   len(files),
+				"message": "成功",
+			})
+		} else {
+			failed = append(failed, map[string]interface{}{
+				"album":   albumName,
+				"success": false,
+				"error":   moveResult.Message,
+			})
+		}
+	}
+
+	response := map[string]interface{}{
+		"total_albums":  len(results) + len(failed),
+		"success":       len(results),
+		"failed":        len(failed),
+		"total_songs":   totalSongs,
+		"results":       results,
+		"failed_detail": failed,
+	}
+
+	// 如果没有导入任何歌曲，返回错误
+	if totalSongs == 0 {
+		return common.Error("源目录下没有音乐文件")
+	}
+
+	if len(failed) > 0 && len(results) == 0 {
+		return common.Error("所有专辑导入失败")
+	}
+
+	return common.SuccessWithData("导入完成", response)
+}
+
+// moveFileDirect 直接移动文件到指定目标路径（不经过路径构建）
+// from: 源目录路径，to: 目标完整路径（包含歌手名和专辑名）
+func (s *ImportService) moveFileDirect(from, to, singerName string) *common.Response {
+	log.Printf("moveFileDirect: from=%s, to=%s, singerName=%s", from, to, singerName)
+
+	// 检查源目录是否存在
+	if !utils.FileExists(from) {
+		return common.Error("源目录不存在: " + from)
+	}
+
+	// 获取源目录下的所有音乐文件
+	files, err := utils.GetMusicFiles(from)
+	if err != nil {
+		return common.Error(fmt.Sprintf("读取目录失败: %v", err))
+	}
+
+	if len(files) == 0 {
+		return common.Error("目录中没有音乐文件")
+	}
+
+	// 解析源路径，获取歌手名和专辑名（用于NAS URL）
+	// 解析专辑名（从源路径最后一级获取）
+	albumName := filepath.Base(from)
+
+	if albumName == "" {
+		return common.Error("无法从路径中解析专辑名")
+	}
+
+	// 目标路径直接使用
+	targetDir := strings.Replace(to, "/", "\\", -1)
+
+	// 创建目标目录
+	log.Printf("创建目标目录: %s", targetDir)
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		return common.Error(fmt.Sprintf("创建目标目录失败: %v", err))
+	}
+	log.Printf("目标目录创建成功")
+
+	// 记录源文件信息
+	var srcFileSizes map[string]int64
+	srcFileSizes = make(map[string]int64)
+	for _, file := range files {
+		if info, err := os.Stat(file.Path); err == nil {
+			srcFileSizes[file.OriginalName] = info.Size()
+		}
+	}
+
+	var failed []string
+
+	// 移动每个文件
+	for i := range files {
+		file := &files[i]
+		targetPath := filepath.Join(targetDir, file.OriginalName)
+
+		err := utils.MoveFile(file.Path, targetPath)
+		if err != nil {
+			failed = append(failed, fmt.Sprintf("%s -> %s: %v", file.OriginalName, targetPath, err))
+			continue
+		}
+
+		// 验证移动是否成功
+		if !utils.FileExists(targetPath) {
+			failed = append(failed, fmt.Sprintf("%s: 移动后文件不存在", file.OriginalName))
+			continue
+		}
+	}
+
+	// 如果有失败，直接返回失败
+	if len(failed) > 0 {
+		return common.Error(fmt.Sprintf("移动失败，共 %d 个文件", len(failed)))
+	}
+
+	// 全部移动完成后，验证目标目录
+	targetFiles, err := utils.GetMusicFiles(targetDir)
+	if err != nil {
+		return common.Error(fmt.Sprintf("验证失败：无法读取目标目录: %v", err))
+	}
+
+	if len(targetFiles) != len(files) {
+		return common.Error(fmt.Sprintf("验证失败：源文件 %d 个，目标文件 %d 个", len(files), len(targetFiles)))
+	}
+
+	result := map[string]interface{}{
+		"total":      len(files),
+		"singer":     singerName,
+		"album":      albumName,
+		"target_dir": targetDir,
+	}
+
+	// 自动入库
 	importResult := s.ImportSongs(targetDir)
 	result["import_result"] = importResult.Data
 
@@ -467,7 +667,7 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 	}
 
 	result := map[string]interface{}{
-		"total":   len(files),
+		"total":    len(files),
 		"imported": importedSongs,
 		"failed":   failed,
 	}

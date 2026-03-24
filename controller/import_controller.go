@@ -70,3 +70,21 @@ func (c *ImportController) ImportSongs(ctx *gin.Context) {
 	result := c.importService.ImportSongs(req.Path)
 	ctx.JSON(200, result)
 }
+
+// ImportSingerAlbums 一键导入-单歌手-所有专辑
+// POST /api/import/singer/albums
+func (c *ImportController) ImportSingerAlbums(ctx *gin.Context) {
+	var req models.ImportSingerAlbumsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, common.Error("参数错误"))
+		return
+	}
+
+	if req.From == "" || req.To == "" {
+		ctx.JSON(400, common.Error("歌手路径和目标路径不能为空"))
+		return
+	}
+
+	result := c.importService.ImportSingerAlbums(req.From, req.To)
+	ctx.JSON(200, result)
+}

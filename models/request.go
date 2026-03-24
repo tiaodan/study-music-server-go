@@ -60,6 +60,12 @@ type ImportSongsRequest struct {
 	Path string `json:"path"` // 要导入的文件夹路径
 }
 
+// 一键导入-单歌手-所有专辑请求
+type ImportSingerAlbumsRequest struct {
+	From string `json:"from"` // 歌手目录，如 C:\test\周杰伦（目录下有多个专辑子目录）
+	To   string `json:"to"`   // 目标路径，如 \\100.86.118.11\hdd\周杰伦
+}
+
 type SongListRequest struct {
 	ID          uint   `json:"id"`
 	Title       string `json:"title"`
