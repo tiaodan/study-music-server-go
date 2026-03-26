@@ -4,7 +4,14 @@
       "Bash(mysql -h localhost -P 3306 -u root -ppassword tp_music -e \"SHOW CREATE TABLE song\\\\G\")",
       "Bash(mysql -u root -ppassword -e \"SELECT name, singer_id, COUNT\\(*\\) as cnt FROM tp_music.album GROUP BY name, singer_id HAVING cnt > 1\")",
       "Bash(mysql -u root -ppassword -e \"SELECT name, COUNT\\(DISTINCT singer_id\\) as singer_count FROM tp_music.album GROUP BY name HAVING singer_count > 1\")",
-      "Bash(mysql -u root -ppassword -e \"SELECT a.name, a.singer_id, s.name as singer_name FROM tp_music.album a LEFT JOIN tp_music.singer s ON a.singer_id = s.id WHERE a.name IN \\(''守村人'', ''天外来物'', ''无数''\\)\")"
+      "Bash(mysql -u root -ppassword -e \"SELECT a.name, a.singer_id, s.name as singer_name FROM tp_music.album a LEFT JOIN tp_music.singer s ON a.singer_id = s.id WHERE a.name IN \\(''守村人'', ''天外来物'', ''无数''\\)\")",
+      "Bash(mysql -u root -ppassword -e \"SELECT COUNT\\(*\\) FROM tp_music.song_singer WHERE singer_id = 1\")",
+      "Bash(mysql -u root -ppassword -e \"SELECT ss.song_id, s.id, s.name FROM tp_music.song_singer ss LEFT JOIN tp_music.song s ON ss.song_id = s.id WHERE ss.singer_id = 1 LIMIT 5\")",
+      "Bash(mysql -u root -ppassword -e \"SELECT id FROM tp_music.song WHERE id IN \\(SELECT song_id FROM tp_music.song_singer WHERE singer_id = 1\\) LIMIT 5\")",
+      "Bash(mysql -u root -ppassword -e \"SELECT ss.song_id, s.id FROM tp_music.song_singer ss LEFT JOIN tp_music.song s ON ss.song_id = s.id WHERE ss.singer_id = 1 LIMIT 10\")",
+      "Bash(mysql -u root -ppassword -e \"SELECT id, name FROM tp_music.song WHERE id IN \\(1,2,3,4,5\\) LIMIT 5\")",
+      "Bash(mysql -u root -ppassword -e \"DESCRIBE tp_music.song\")",
+      "Bash(mysql -u root -ppassword -e \"SELECT * FROM tp_music.song WHERE id IN \\(1,2,3\\) AND id > 0\")"
     ]
   }
 }

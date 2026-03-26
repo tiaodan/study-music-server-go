@@ -359,11 +359,18 @@ func (s *ImportService) ImportSingerAlbums(singerPath, targetPath string) *commo
 		moveResult := s.moveFileDirect(albumPath, albumTargetPath, singerName)
 
 		if moveResult.Success {
-			totalSongs += len(files)
+			// 只统计 mp3/wav 歌曲，不统计 lrc
+			mp3WavCount := 0
+			for _, f := range files {
+				if f.Ext == ".mp3" || f.Ext == ".wav" {
+					mp3WavCount++
+				}
+			}
+			totalSongs += mp3WavCount
 			results = append(results, map[string]interface{}{
 				"album":   albumName,
 				"success": true,
-				"songs":   len(files),
+				"songs":   mp3WavCount,
 				"message": "成功",
 			})
 		} else {
