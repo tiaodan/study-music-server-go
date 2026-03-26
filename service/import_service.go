@@ -530,24 +530,49 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 	var importedSongs []map[string]interface{}
 	var failed []string
 
+	// 保存主歌手名（从路径中获取的，不被文件名覆盖）
+	mainSingerName := singerName
+
 	for i := range files {
 		file := &files[i]
 
 		// 解析文件名获取歌手和歌曲名
 		fileSinger, songName := utils.ParseMusicFileName(file.OriginalName)
 
-		// 优先使用文件名中的歌手名，如果没有则使用目录名
-		if fileSinger != "" {
-			singerName = fileSinger
-		}
-
 		// 跳过歌词文件，不入库
 		if file.Ext == ".lrc" {
 			continue
 		}
 
-		// 处理多个歌手（按"、"分割，如"周杰伦、杨瑞代"）
-		singerNames := strings.Split(singerName, "、")
+		// 处理多个歌手：优先使用路径中的主歌手，文件名中的其他歌手追加进来
+		var allSingerNames []string
+		// 先加主歌手
+		if mainSingerName != "" {
+			allSingerNames = append(allSingerNames, mainSingerName)
+		}
+		// 如果文件名中有歌手，且和主歌手不同，则追加
+		if fileSinger != "" && fileSinger != mainSingerName {
+			// 分割文件中的多个歌手
+			fileSingers := strings.Split(fileSinger, "、")
+			for _, fs := range fileSingers {
+				fs = strings.TrimSpace(fs)
+				if fs != "" && fs != mainSingerName {
+					allSingerNames = append(allSingerNames, fs)
+				}
+			}
+		}
+
+		// 去重
+		uniqueSingerNames := []string{}
+		seen := make(map[string]bool)
+		for _, name := range allSingerNames {
+			if !seen[name] {
+				seen[name] = true
+				uniqueSingerNames = append(uniqueSingerNames, name)
+			}
+		}
+
+		singerNames := uniqueSingerNames
 		var singerIds []uint
 
 		// 插入或查询歌手
@@ -615,7 +640,7 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 
 		// 插入歌曲
 		song := &models.Song{
-			Name:           songName + file.Ext, // 歌曲名包含扩展名
+			Name:           songName, // 歌曲名不包含扩展名
 			AlbumId:        albumId,
 			NasUrlPath:     nasUrl,
 			FullNameSinger: fullNameSinger, // 多歌手时存储，单人则为空

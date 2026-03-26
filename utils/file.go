@@ -109,18 +109,48 @@ func ParseMusicFileName(filename string) (string, string) {
 	ext := GetFileExt(filename)
 	nameWithoutExt := strings.TrimSuffix(filename, ext)
 
-	// 按 "-" 分割
-	parts := strings.Split(nameWithoutExt, "-")
-	if len(parts) < 2 {
-		// 没有分隔符，整个作为歌曲名
-		return "", nameWithoutExt
+	// 检查是否包含 " - " 格式（原始格式）
+	hasDash := strings.Contains(nameWithoutExt, " - ")
+
+	if hasDash {
+		// 预处理：处理 " - " 分隔符（歌手 - 歌曲）
+		nameWithoutExt = strings.ReplaceAll(nameWithoutExt, " - ", "###")
+		nameWithoutExt = strings.ReplaceAll(nameWithoutExt, " -", "###")
+		nameWithoutExt = strings.ReplaceAll(nameWithoutExt, "- ", "###")
+
+		// 按 "###" 分割
+		parts := strings.Split(nameWithoutExt, "###")
+		if len(parts) >= 2 {
+			singer := strings.TrimSpace(parts[0])
+			songName := strings.TrimSpace(strings.Join(parts[1:], "-"))
+			singer = strings.ReplaceAll(singer, " ", "")
+			return singer, songName
+		}
 	}
 
-	// 最后一个部分是歌曲名
-	songName := strings.TrimSpace(parts[len(parts)-1])
-	singer := strings.TrimSpace(strings.Join(parts[:len(parts)-1], ","))
+	// 检查是否包含单个 "-"（格式化后的格式）
+	if strings.Contains(nameWithoutExt, "-") {
+		parts := strings.Split(nameWithoutExt, "-")
+		if len(parts) >= 2 {
+			// 检查第一部分是否包含歌手分隔符（如 "、" 或 ","）
+			firstPart := parts[0]
+			if strings.Contains(firstPart, "、") || strings.Contains(firstPart, ",") {
+				// 是多歌手格式：如 "林俊杰、洪俊扬-L-O-V-E"
+				singer := strings.TrimSpace(firstPart)
+				songName := strings.TrimSpace(strings.Join(parts[1:], "-"))
+				singer = strings.ReplaceAll(singer, " ", "")
+				return singer, songName
+			}
 
-	return singer, songName
+			// 单歌手格式：如 "林俊杰-K-O"
+			singer := strings.TrimSpace(firstPart)
+			songName := strings.TrimSpace(strings.Join(parts[1:], "-"))
+			return singer, songName
+		}
+	}
+
+	// 没有分隔符，整个作为歌曲名
+	return "", nameWithoutExt
 }
 
 // FormatMusicFileName 格式化音乐文件名
