@@ -15,7 +15,24 @@
       "Bash(go build:*)",
       "Bash(mysql -u root -ppassword tp_music -e \"SELECT ss.singer_id, ss.song_id, s.name as song_name FROM song_singer ss LEFT JOIN song s ON ss.song_id = s.id WHERE ss.singer_id IN \\(8, 13\\);\")",
       "Bash(mysql -u root -ppassword tp_music -e \"DESCRIBE album;\")",
-      "Bash(mysql -u root -ppassword tp_music -e \"SELECT singer_id, COUNT\\(*\\) as album_count FROM album GROUP BY singer_id ORDER BY singer_id;\")"
+      "Bash(mysql -u root -ppassword tp_music -e \"SELECT singer_id, COUNT\\(*\\) as album_count FROM album GROUP BY singer_id ORDER BY singer_id;\")",
+      "Bash(mysql -u root -ppassword tp_music -e \"SELECT DISTINCT sex FROM singer;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \":*)",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, sex, location, introduction FROM singer LIMIT 15;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, sex, location, introduction FROM singer WHERE sex = 3;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT sex, CASE sex WHEN 0 THEN ''女'' WHEN 1 THEN ''男'' WHEN 2 THEN ''保密'' WHEN 3 THEN ''组合'' END AS sex_name, COUNT\\(*\\) as count FROM singer GROUP BY sex ORDER BY sex;\")",
+      "Bash(go run:*)",
+      "Bash(./scripts/fetch_singer_info.exe)",
+      "Bash(curl -s \"https://music.163.com/api/search/get?s=周杰伦&type=100&limit=1\" -H \"Referer: https://music.163.com\" -H \"User-Agent: Mozilla/5.0\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, sex, location, introduction FROM singer LIMIT 20;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"UPDATE singer SET sex=1, location=''中国台湾'', birth=''1979-01-18'', introduction=''华语流行乐男歌手、音乐人、演员、导演。2000年发行首张专辑Jay出道，代表作双截棍、七里香、青花瓷、稻香。获得15座金曲奖，被誉为华语乐坛天王。'' WHERE id=1;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, sex, birth, location, introduction FROM singer LIMIT 15;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, sex, birth, location FROM singer WHERE birth IS NOT NULL ORDER BY id;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, sex, birth, location, LEFT\\(introduction, 50\\) as intro FROM singer WHERE id >= 46;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, pic FROM singer LIMIT 10;\")",
+      "Bash(curl -s \"https://baike.baidu.com/item/%E5%91%A8%E6%9D%B0%E4%BB%A6\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\")",
+      "Bash(curl -s https://baike.baidu.com/item/%E5%91%A8%E6%9D%B0%E4%BB%A6 -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\")",
+      "Read(//tmp/**)"
     ]
   }
 }
