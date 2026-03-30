@@ -11,7 +11,11 @@
       "Bash(mysql -u root -ppassword -e \"SELECT ss.song_id, s.id FROM tp_music.song_singer ss LEFT JOIN tp_music.song s ON ss.song_id = s.id WHERE ss.singer_id = 1 LIMIT 10\")",
       "Bash(mysql -u root -ppassword -e \"SELECT id, name FROM tp_music.song WHERE id IN \\(1,2,3,4,5\\) LIMIT 5\")",
       "Bash(mysql -u root -ppassword -e \"DESCRIBE tp_music.song\")",
-      "Bash(mysql -u root -ppassword -e \"SELECT * FROM tp_music.song WHERE id IN \\(1,2,3\\) AND id > 0\")"
+      "Bash(mysql -u root -ppassword -e \"SELECT * FROM tp_music.song WHERE id IN \\(1,2,3\\) AND id > 0\")",
+      "Bash(go build:*)",
+      "Bash(mysql -u root -ppassword tp_music -e \"SELECT ss.singer_id, ss.song_id, s.name as song_name FROM song_singer ss LEFT JOIN song s ON ss.song_id = s.id WHERE ss.singer_id IN \\(8, 13\\);\")",
+      "Bash(mysql -u root -ppassword tp_music -e \"DESCRIBE album;\")",
+      "Bash(mysql -u root -ppassword tp_music -e \"SELECT singer_id, COUNT\\(*\\) as album_count FROM album GROUP BY singer_id ORDER BY singer_id;\")"
     ]
   }
 }

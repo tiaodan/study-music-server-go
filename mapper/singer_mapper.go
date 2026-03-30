@@ -29,9 +29,28 @@ func (*SingerMapper) FindAll() ([]models.Singer, error) {
 	return singers, err
 }
 
+// FindAllWithAlbums 只返回有专辑的歌手
+func (*SingerMapper) FindAllWithAlbums() ([]models.Singer, error) {
+	var singers []models.Singer
+	err := DB.Distinct("singer.*").Table("singer").
+		Joins("INNER JOIN album ON singer.id = album.singer_id").
+		Find(&singers).Error
+	return singers, err
+}
+
 func (*SingerMapper) FindByName(name string) ([]models.Singer, error) {
 	var singers []models.Singer
 	err := DB.Where("name LIKE ?", "%"+name+"%").Find(&singers).Error
+	return singers, err
+}
+
+// FindByNameWithAlbums 按名字搜索，只返回有专辑的歌手
+func (*SingerMapper) FindByNameWithAlbums(name string) ([]models.Singer, error) {
+	var singers []models.Singer
+	err := DB.Distinct("singer.*").Table("singer").
+		Joins("INNER JOIN album ON singer.id = album.singer_id").
+		Where("singer.name LIKE ?", "%"+name+"%").
+		Find(&singers).Error
 	return singers, err
 }
 

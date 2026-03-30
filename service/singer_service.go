@@ -77,7 +77,7 @@ func (s *SingerService) SingerOfId(id uint) *common.Response {
 }
 
 func (s *SingerService) SingerOfName(name string) *common.Response {
-	singers, err := s.singerMapper.FindByName(name)
+	singers, err := s.singerMapper.FindByNameWithAlbums(name)
 	if err != nil {
 		return common.Error("获取失败")
 	}
@@ -85,7 +85,7 @@ func (s *SingerService) SingerOfName(name string) *common.Response {
 }
 
 func (s *SingerService) AllSinger() *common.Response {
-	singers, err := s.singerMapper.FindAll()
+	singers, err := s.singerMapper.FindAllWithAlbums()
 	if err != nil {
 		return common.Error("获取失败")
 	}
