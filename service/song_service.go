@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"study-music-server-go/common"
 	"study-music-server-go/mapper"
 	"study-music-server-go/models"
@@ -314,7 +315,7 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 
 	// 查询歌曲详情
 	var songs []models.Song
-	err = mapper.DB.Where("id IN ?", songIds).Find(&songs).Error
+	err = mapper.DB.Where("id IN ?", songIds).Order("id").Find(&songs).Error
 	log.Printf("SongOfSingerId: found songs count=%d", len(songs))
 	// 打印每首歌的 AlbumId 和 NasUrlPath
 	for i, song := range songs {
@@ -390,11 +391,15 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 		log.Printf("SongOfSingerId: Added song to album '%s', current count=%d", albumName, len(albumMap[albumName].Songs))
 	}
 
-	// 从 map 转换为 slice
+	// 从 map 转换为 slice，并按 album_id 排序
 	var result []AlbumWithSongs
 	for _, album := range albumMap {
 		result = append(result, *album)
 	}
+	// 按 album_id 排序
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].AlbumId < result[j].AlbumId
+	})
 
 	log.Printf("SongOfSingerId: Final result: %d albums", len(result))
 

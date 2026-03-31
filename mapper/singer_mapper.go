@@ -25,7 +25,7 @@ func (*SingerMapper) FindById(id uint) (*models.Singer, error) {
 
 func (*SingerMapper) FindAll() ([]models.Singer, error) {
 	var singers []models.Singer
-	err := DB.Find(&singers).Error
+	err := DB.Order("id").Find(&singers).Error
 	return singers, err
 }
 
@@ -34,13 +34,14 @@ func (*SingerMapper) FindAllWithAlbums() ([]models.Singer, error) {
 	var singers []models.Singer
 	err := DB.Distinct("singer.*").Table("singer").
 		Joins("INNER JOIN album ON singer.id = album.singer_id").
+		Order("singer.id").
 		Find(&singers).Error
 	return singers, err
 }
 
 func (*SingerMapper) FindByName(name string) ([]models.Singer, error) {
 	var singers []models.Singer
-	err := DB.Where("name LIKE ?", "%"+name+"%").Find(&singers).Error
+	err := DB.Where("name LIKE ?", "%"+name+"%").Order("id").Find(&singers).Error
 	return singers, err
 }
 
@@ -50,6 +51,7 @@ func (*SingerMapper) FindByNameWithAlbums(name string) ([]models.Singer, error) 
 	err := DB.Distinct("singer.*").Table("singer").
 		Joins("INNER JOIN album ON singer.id = album.singer_id").
 		Where("singer.name LIKE ?", "%"+name+"%").
+		Order("singer.id").
 		Find(&singers).Error
 	return singers, err
 }

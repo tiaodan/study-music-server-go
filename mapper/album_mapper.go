@@ -34,7 +34,7 @@ func (*AlbumMapper) FindByNameAndSingerId(name string, singerId uint) (*models.A
 
 func (*AlbumMapper) FindAll() ([]models.Album, error) {
 	var albums []models.Album
-	err := DB.Find(&albums).Error
+	err := DB.Order("id").Find(&albums).Error
 	return albums, err
 }
 

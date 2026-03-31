@@ -31,19 +31,19 @@ func (*SongMapper) FindById(id uint) (*models.Song, error) {
 
 func (*SongMapper) FindAll() ([]models.Song, error) {
 	var songs []models.Song
-	err := DB.Find(&songs).Error
+	err := DB.Order("id").Find(&songs).Error
 	return songs, err
 }
 
 func (*SongMapper) FindByAlbumId(albumId uint) ([]models.Song, error) {
 	var songs []models.Song
-	err := DB.Where("album_id = ?", albumId).Find(&songs).Error
+	err := DB.Where("album_id = ?", albumId).Order("id").Find(&songs).Error
 	return songs, err
 }
 
 func (*SongMapper) FindByName(name string) ([]models.Song, error) {
 	var songs []models.Song
-	err := DB.Where("name LIKE ?", "%"+name+"%").Find(&songs).Error
+	err := DB.Where("name LIKE ?", "%"+name+"%").Order("id").Find(&songs).Error
 	return songs, err
 }
 
