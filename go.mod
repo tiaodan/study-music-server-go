@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.9.1
+	github.com/hajimehoshi/go-mp3 v0.3.4
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gorm v1.25.5
 )

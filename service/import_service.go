@@ -551,6 +551,18 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 			continue
 		}
 
+		// 读取 mp3 时长
+		var duration int
+		if file.Ext == ".mp3" {
+			dur, err := utils.GetMP3Duration(file.Path)
+			if err != nil {
+				log.Printf("读取时长失败: %s, err: %v", file.OriginalName, err)
+			} else {
+				duration = dur
+				log.Printf("读取时长成功: %s, duration: %d秒", file.OriginalName, duration)
+			}
+		}
+
 		// 处理多个歌手：优先使用路径中的主歌手，文件名中的其他歌手追加进来
 		var allSingerNames []string
 		// 先加主歌手
@@ -651,6 +663,7 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 			AlbumId:        albumId,
 			NasUrlPath:     nasUrl,
 			FullNameSinger: fullNameSinger, // 多歌手时存储，单人则为空
+			Duration:       duration,       // 歌曲时长（秒）
 		}
 		err = s.songMapper.Add(song)
 		if err != nil {

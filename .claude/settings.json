@@ -32,7 +32,25 @@
       "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, pic FROM singer LIMIT 10;\")",
       "Bash(curl -s \"https://baike.baidu.com/item/%E5%91%A8%E6%9D%B0%E4%BB%A6\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\")",
       "Bash(curl -s https://baike.baidu.com/item/%E5%91%A8%E6%9D%B0%E4%BB%A6 -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\")",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, introduction FROM singer WHERE id=1;\")",
+      "Bash(curl -s \"http://localhost:9003/song/singer/detail?singerId=1\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, introduction FROM song WHERE singer_id = 1 OR id IN \\(SELECT song_id FROM song_singer WHERE singer_id = 1\\) LIMIT 10;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, introduction FROM song WHERE id IN \\(SELECT song_id FROM song_singer WHERE singer_id = 1\\) LIMIT 10;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT * FROM device;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, nas_url_path FROM song LIMIT 5;\")",
+      "Bash(./scripts/update_song_duration.exe)",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, duration FROM song WHERE duration > 0 LIMIT 10;\")",
+      "Bash(go get:*)",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, duration, CONCAT\\(FLOOR\\(duration/60\\), ''分'', MOD\\(duration, 60\\), ''秒''\\) as format FROM song WHERE name IN \\(''可爱女人'', ''伊斯坦堡'', ''印第安老斑鸠''\\);\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"DESCRIBE song;\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d[''''data''''][0][''''songs''''][0], indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(curl -s http://localhost:9003/song/singer/detail?singerId=1)",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, duration FROM song WHERE id=1;\")",
+      "Bash(curl -s \"http://localhost:9003/song/1\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(curl -s \"http://localhost:9003/song/detail?id=1\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, duration FROM song WHERE id IN \\(SELECT song_id FROM song_singer WHERE singer_id=1\\) LIMIT 5;\")"
     ]
   }
 }

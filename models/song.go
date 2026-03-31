@@ -10,6 +10,7 @@ type Song struct {
 	Name           string     `gorm:"size:100;not null;uniqueIndex:idx_album_name" json:"name"`
 	FullNameSinger string     `gorm:"size:255" json:"full_name_singer"`   // 多歌手时存储，单人则为空
 	Introduction   string     `gorm:"size:255" json:"introduction"`
+	Duration       int        `gorm:"default:0" json:"duration"`          // 歌曲时长（秒）
 	CreateTime     time.Time  `gorm:"autoCreateTime" json:"create_time"`
 	UpdateTime     time.Time  `gorm:"autoCreateTime;autoUpdateTime" json:"update_time"`
 	Pic            string     `gorm:"size:255" json:"pic"`
