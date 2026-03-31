@@ -50,7 +50,8 @@
       "Bash(curl -s \"http://localhost:9003/song/1\")",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2, ensure_ascii=False\\)\\)\")",
       "Bash(curl -s \"http://localhost:9003/song/detail?id=1\")",
-      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, duration FROM song WHERE id IN \\(SELECT song_id FROM song_singer WHERE singer_id=1\\) LIMIT 5;\")"
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, duration FROM song WHERE id IN \\(SELECT song_id FROM song_singer WHERE singer_id=1\\) LIMIT 5;\")",
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SHOW INDEX FROM song;\")"
     ]
   }
 }

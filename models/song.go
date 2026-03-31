@@ -6,7 +6,7 @@ import (
 
 type Song struct {
 	ID             uint       `gorm:"primaryKey;autoIncrement" json:"id"`
-	AlbumId        *uint      `gorm:"index" json:"album_id"`
+	AlbumId        *uint      `gorm:"index:idx_album_id;uniqueIndex:idx_album_name" json:"album_id"`
 	Name           string     `gorm:"size:100;not null;uniqueIndex:idx_album_name" json:"name"`
 	FullNameSinger string     `gorm:"size:255" json:"full_name_singer"`   // 多歌手时存储，单人则为空
 	Introduction   string     `gorm:"size:255" json:"introduction"`
