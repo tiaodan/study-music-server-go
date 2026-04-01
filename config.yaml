@@ -6,7 +6,7 @@ database:
   port: 3306
   user: root
   password: password
-  dbname: tp_music
+  dbname: music
 
 database_test:
   host: localhost

@@ -1,0 +1,14 @@
+[Unit]
+Description=Music Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/run/project/music/server-go
+ExecStart=/home/run/project/music/server-go/music-server
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

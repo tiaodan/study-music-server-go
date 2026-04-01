@@ -51,7 +51,22 @@
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2, ensure_ascii=False\\)\\)\")",
       "Bash(curl -s \"http://localhost:9003/song/detail?id=1\")",
       "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SELECT id, name, duration FROM song WHERE id IN \\(SELECT song_id FROM song_singer WHERE singer_id=1\\) LIMIT 5;\")",
-      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SHOW INDEX FROM song;\")"
+      "Bash(mysql -u root -ppassword tp_music --default-character-set=utf8mb4 -e \"SHOW INDEX FROM song;\")",
+      "Bash(powershell -Command \"Compress-Archive -Path release/* -DestinationPath music-server-release.zip -Force\")",
+      "Bash(rm -f music-server-release.zip)",
+      "Bash(rm -rf release)",
+      "Bash(mkdir -p release)",
+      "Bash(cp music-server.exe release/)",
+      "Bash(cp config.yaml release/)",
+      "Bash(mkdir -p release-linux)",
+      "Bash(cp music-server:*)",
+      "Bash(cp config.yaml release-linux/)",
+      "Bash(cp -r img release-linux/)",
+      "Bash(mkdir -p release-linux/logout)",
+      "Bash(echo \"检查几个可能的问题：:*)",
+      "Bash(rm -f music-server-linux.zip)",
+      "Bash(rm -rf release-linux)",
+      "Bash(powershell -Command \"Compress-Archive -Path release-linux/* -DestinationPath music-server-linux.zip\")"
     ]
   }
 }

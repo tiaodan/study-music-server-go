@@ -38,17 +38,20 @@ func (s *SongService) checkUrlAccessible(url string) bool {
 		return false
 	}
 
-	// 检查是否为本地路径或SMB路径（以 \\ 或盘符 开头）
-	isLocalPath := strings.HasPrefix(url, "\\\\") || strings.HasPrefix(url, "C:") ||
-		strings.HasPrefix(url, "D:") || strings.HasPrefix(url, "E:") ||
-		strings.HasPrefix(url, "F:") || strings.HasPrefix(url, "G:")
+	// 检查是否为本地路径
+	// Windows: \\ 开头(UNC) 或 C:/D:/E:/F:/G: 开头(盘符)
+	// Linux: / 开头
+	isLocalPath := strings.HasPrefix(url, "\\") ||
+		strings.HasPrefix(url, "/") ||
+		strings.HasPrefix(url, "C:") ||
+		strings.HasPrefix(url, "D:") ||
+		strings.HasPrefix(url, "E:") ||
+		strings.HasPrefix(url, "F:") ||
+		strings.HasPrefix(url, "G:")
 
 	if isLocalPath {
-		// 本地路径/SMB路径：直接检查文件是否存在
-		// UNC路径如 \\100.86.118.11\hdd 直接使用
-		// 统一路径分隔符，将 / 转换为 \
-		localPath := strings.Replace(url, "/", "\\", -1)
-		_, err := os.Stat(localPath)
+		// 本地路径：直接检查文件是否存在
+		_, err := os.Stat(url)
 		if err == nil {
 			log.Printf("本地文件存在: %s", url)
 			return true

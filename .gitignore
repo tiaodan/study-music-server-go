@@ -3,3 +3,13 @@
 
 # 日志
 /logout/*.log
+
+# 打包文件
+/release/*
+music-server.zip
+music-server-release.zip
+music-server.exe
+music-server-linux.zip
+
+/release-linux
+music-server
