@@ -72,20 +72,21 @@ func (c *SongController) SongOfId(ctx *gin.Context) {
 		return
 	}
 
-	// 如果是 nas 来源，返回音频流
-	if songData.UrlSource == "nas" && songData.Url != "" {
-		// SMB路径直接使用
-		localPath := songData.Url
+	// 判断是否为本地文件路径（nas 或 vultr 的本地挂载）
+	// 本地路径特征：以 / 或 \ 或盘符开头
+	url := songData.Url
+	isLocalPath := url != "" && (url[0] == '/' || url[0] == '\\' ||
+		(len(url) >= 2 && url[1] == ':'))
 
-		// 打开文件
-		file, err := os.Open(localPath)
+	if isLocalPath {
+		// 本地路径直接返回音频流
+		file, err := os.Open(url)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "文件打开失败: " + err.Error()})
 			return
 		}
 		defer file.Close()
 
-		// 获取文件信息
 		fileInfo, err := file.Stat()
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取文件信息失败"})
@@ -96,9 +97,9 @@ func (c *SongController) SongOfId(ctx *gin.Context) {
 		ctx.Header("Content-Type", "audio/mpeg")
 		ctx.Header("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
 		ctx.Header("Accept-Ranges", "bytes")
+		ctx.Header("Content-Disposition", "inline; filename="+filepath.Base(url))
 
 		// 返回音频流
-		ctx.Header("Content-Disposition", "inline; filename="+filepath.Base(localPath))
 		_, err = io.Copy(ctx.Writer, file)
 		if err != nil {
 			return

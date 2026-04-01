@@ -399,9 +399,9 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 	for _, album := range albumMap {
 		result = append(result, *album)
 	}
-	// 按 album_id 排序
+	// 按 album_id 倒序排序（最新专辑在前）
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].AlbumId < result[j].AlbumId
+		return result[i].AlbumId > result[j].AlbumId
 	})
 
 	log.Printf("SongOfSingerId: Final result: %d albums", len(result))

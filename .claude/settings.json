@@ -66,7 +66,8 @@
       "Bash(echo \"检查几个可能的问题：:*)",
       "Bash(rm -f music-server-linux.zip)",
       "Bash(rm -rf release-linux)",
-      "Bash(powershell -Command \"Compress-Archive -Path release-linux/* -DestinationPath music-server-linux.zip\")"
+      "Bash(powershell -Command \"Compress-Archive -Path release-linux/* -DestinationPath music-server-linux.zip\")",
+      "Bash(./build-linux-only.sh)"
     ]
   }
 }
