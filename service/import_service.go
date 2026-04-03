@@ -31,20 +31,44 @@ func readLrcFile(path string) (string, error) {
 		return "", err
 	}
 
+	var result string
 	// 使用 Go 自带的 utf8.Valid 检测是否为有效的 UTF-8
 	if utf8.Valid(content) {
-		return string(content), nil
+		result = string(content)
+	} else {
+		// UTF-8 无效，尝试 GBK 解码
+		decoder := simplifiedchinese.GBK.NewDecoder()
+		decoded, _, err := transform.Bytes(decoder, content)
+		if err != nil {
+			// 如果转换失败，返回原始内容
+			result = string(content)
+		} else {
+			result = string(decoded)
+		}
 	}
 
-	// UTF-8 无效，尝试 GBK 解码
-	decoder := simplifiedchinese.GBK.NewDecoder()
-	result, _, err := transform.Bytes(decoder, content)
-	if err != nil {
-		// 如果转换失败，返回原始内容
-		return string(content), nil
+	// 清理 awlrc 等额外内容（只保留标准 lrc 格式）
+	return cleanLrcContent(result), nil
+}
+
+// cleanLrcContent 清理歌词内容，去掉非标准 lrc 部分
+func cleanLrcContent(lyric string) string {
+	// 去掉 UTF-8 BOM (EF BB BF)
+	if len(lyric) > 2 && lyric[0] == 0xEF && lyric[1] == 0xBB && lyric[2] == 0xBF {
+		lyric = lyric[3:]
 	}
 
-	return string(result), nil
+	// 找到第一个非标准 lrc 标签的位置（如 [awlrc、[krc 等）
+	nonStandardTags := []string{"[awlrc", "[krc", "[qlrc"}
+	for _, tag := range nonStandardTags {
+		idx := strings.Index(lyric, tag)
+		if idx > 0 {
+			lyric = strings.TrimSpace(lyric[:idx])
+			break
+		}
+	}
+
+	return lyric
 }
 
 func NewImportService() *ImportService {

@@ -70,7 +70,8 @@
       "Bash(./build-linux-only.sh)",
       "Bash(mysql -h localhost -u root -ppassword music -e \"SELECT id, name, LEFT\\(lyric, 100\\) as lyric_preview FROM song WHERE lyric != '' AND lyric IS NOT NULL LIMIT 10;\")",
       "Bash(mysql -h localhost -u root -ppassword music -e \"SELECT * FROM banner LIMIT 5;\")",
-      "Bash(mysql -h localhost -u root -ppassword music -e \"INSERT INTO banner \\(title, pic\\) VALUES \\('推荐歌手', ''\\), \\('热门歌曲', ''\\), \\('新专辑', ''\\);\")"
+      "Bash(mysql -h localhost -u root -ppassword music -e \"INSERT INTO banner \\(title, pic\\) VALUES \\('推荐歌手', ''\\), \\('热门歌曲', ''\\), \\('新专辑', ''\\);\")",
+      "Bash(go test:*)"
     ]
   }
 }
