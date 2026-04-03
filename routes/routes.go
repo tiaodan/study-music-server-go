@@ -27,6 +27,7 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/singer/detail", singerCtrl.SingerOfId)
 	r.GET("/singer/name/detail", singerCtrl.SingerOfName)
 	r.GET("/singer", singerCtrl.AllSinger)
+	r.GET("/singer/albums", singerCtrl.AlbumsOfSingerId) // 新增：查歌手专辑列表
 
 	// Song routes
 	songCtrl := controller.NewSongController()
@@ -36,6 +37,7 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/song/detail", songCtrl.SongOfId)
 	r.GET("/song/:id", songCtrl.SongOfId)
 	r.GET("/song/singer/detail", songCtrl.SongOfSingerId)
+	r.GET("/song/album/detail", songCtrl.SongsOfAlbumId) // 新增：查专辑歌曲列表
 	r.GET("/song/name/detail", songCtrl.SongOfName)
 	r.GET("/song", songCtrl.AllSong)
 
@@ -69,6 +71,7 @@ func SetupRoutes(r *gin.Engine) {
 	// Banner routes
 	bannerCtrl := controller.NewBannerController()
 	r.GET("/banner", bannerCtrl.AllBanner)
+	r.GET("/banner/getAllBanner", bannerCtrl.AllBanner) // 兼容旧路径
 
 	// Admin routes
 	adminCtrl := controller.NewAdminController()

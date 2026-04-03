@@ -71,3 +71,15 @@ func (c *SingerController) AllSinger(ctx *gin.Context) {
 	resp := c.singerService.AllSinger()
 	ctx.JSON(http.StatusOK, resp)
 }
+
+// AlbumsOfSingerId 查询歌手的所有专辑
+func (c *SingerController) AlbumsOfSingerId(ctx *gin.Context) {
+	idStr := ctx.Query("singerId")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid singerId"})
+		return
+	}
+	resp := c.singerService.AlbumsBySingerId(uint(id))
+	ctx.JSON(http.StatusOK, resp)
+}

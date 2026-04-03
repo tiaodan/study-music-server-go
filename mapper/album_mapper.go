@@ -45,3 +45,10 @@ func (*AlbumMapper) Update(album *models.Album) error {
 func (*AlbumMapper) Delete(id uint) error {
 	return DB.Delete(&models.Album{}, id).Error
 }
+
+// FindBySingerId 查询歌手的所有专辑（按ID倒序）
+func (*AlbumMapper) FindBySingerId(singerId uint) ([]models.Album, error) {
+	var albums []models.Album
+	err := DB.Where("singer_id = ?", singerId).Order("id desc").Find(&albums).Error
+	return albums, err
+}

@@ -9,12 +9,16 @@ import (
 type SingerService struct {
 	singerMapper     *mapper.SingerMapper
 	songSingerMapper *mapper.SongSingerMapper
+	albumMapper      *mapper.AlbumMapper
+	songMapper       *mapper.SongMapper
 }
 
 func NewSingerService() *SingerService {
 	return &SingerService{
 		singerMapper:     mapper.NewSingerMapper(),
 		songSingerMapper: mapper.NewSongSingerMapper(),
+		albumMapper:      mapper.NewAlbumMapper(),
+		songMapper:       mapper.NewSongMapper(),
 	}
 }
 
@@ -90,4 +94,59 @@ func (s *SingerService) AllSinger() *common.Response {
 		return common.Error("获取失败")
 	}
 	return common.SuccessWithData("获取成功", singers)
+}
+
+// AlbumWithSongCount 专辑信息（含歌曲数量）
+type AlbumWithSongCount struct {
+	ID        uint   `json:"id"`
+	Name      string `json:"name"`
+	SingerId  uint   `json:"singer_id"`
+	Pic       string `json:"pic"`
+	SongCount int    `json:"song_count"`
+}
+
+// AlbumsBySingerId 查询歌手的所有专辑（含歌曲数量）
+func (s *SingerService) AlbumsBySingerId(singerId uint) *common.Response {
+	albums, err := s.albumMapper.FindBySingerId(singerId)
+	if err != nil {
+		return common.Error("获取专辑失败")
+	}
+
+	// 批量统计歌曲数量（避免N+1）
+	var albumIds []uint
+	for _, album := range albums {
+		albumIds = append(albumIds, album.ID)
+	}
+
+	// 查询每个专辑的歌曲数量
+	songCounts := make(map[uint]int)
+	if len(albumIds) > 0 {
+		type CountResult struct {
+			AlbumId uint
+			Count   int
+		}
+		var counts []CountResult
+		mapper.DB.Table("song").
+			Select("album_id, COUNT(*) as count").
+			Where("album_id IN ?", albumIds).
+			Group("album_id").
+			Find(&counts)
+		for _, c := range counts {
+			songCounts[c.AlbumId] = c.Count
+		}
+	}
+
+	// 组装结果
+	result := make([]AlbumWithSongCount, len(albums))
+	for i, album := range albums {
+		result[i] = AlbumWithSongCount{
+			ID:        album.ID,
+			Name:      album.Name,
+			SingerId:  album.SingerId,
+			Pic:       album.Pic,
+			SongCount: songCounts[album.ID],
+		}
+	}
+
+	return common.SuccessWithData("获取成功", result)
 }

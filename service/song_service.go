@@ -314,18 +314,28 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 		return common.SuccessWithData("获取成功", []AlbumWithSongs{})
 	}
 
-	log.Printf("SongOfSingerId: singerId=%d, songIds=%v, count=%d", singerId, songIds[:5], len(songIds))
-
 	// 查询歌曲详情
 	var songs []models.Song
 	err = mapper.DB.Where("id IN ?", songIds).Order("id").Find(&songs).Error
-	log.Printf("SongOfSingerId: found songs count=%d", len(songs))
-	// 打印每首歌的 AlbumId 和 NasUrlPath
-	for i, song := range songs {
-		log.Printf("Song[%d]: id=%d, name=%s, albumId=%v, nasUrlPath=%s", i, song.ID, song.Name, song.AlbumId, song.NasUrlPath)
-	}
 	if err != nil {
 		return common.Error("获取失败")
+	}
+
+	// 批量查询专辑（优化：避免N+1查询）
+	var albumIds []uint
+	for _, song := range songs {
+		if song.AlbumId != nil && *song.AlbumId > 0 {
+			albumIds = append(albumIds, *song.AlbumId)
+		}
+	}
+	var albums []models.Album
+	if len(albumIds) > 0 {
+		mapper.DB.Where("id IN ?", albumIds).Find(&albums)
+	}
+	// 建立 albumId -> album 的 map
+	albumIdToName := make(map[uint]string)
+	for _, album := range albums {
+		albumIdToName[album.ID] = album.Name
 	}
 
 	// 填充歌手名、专辑名、url
@@ -334,27 +344,17 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 
 		// 填充专辑名：优先从 album_id 查表，其次从 nas_url_path 解析
 		if songs[i].AlbumId != nil && *songs[i].AlbumId > 0 {
-			log.Printf("Song[%d] AlbumId=%d, trying to find album...", i, *songs[i].AlbumId)
-			album, err := s.albumMapper.FindById(*songs[i].AlbumId)
-			if err == nil && album != nil {
-				songs[i].Album = album.Name
-				log.Printf("Song[%d] Found album from AlbumId: %s", i, album.Name)
-			} else {
-				log.Printf("Song[%d] Album not found for AlbumId=%d, err=%v", i, *songs[i].AlbumId, err)
+			if name, ok := albumIdToName[*songs[i].AlbumId]; ok {
+				songs[i].Album = name
 			}
 		}
 		// 如果专辑名仍为空，从 nas_url_path 解析（如：周杰伦/哎呦，不错哦/歌曲.mp3）
 		if songs[i].Album == "" && songs[i].NasUrlPath != "" {
-			log.Printf("Song[%d] NasUrlPath=%s, trying to parse album...", i, songs[i].NasUrlPath)
 			parts := strings.Split(songs[i].NasUrlPath, "/")
 			if len(parts) >= 2 {
 				songs[i].Album = parts[1] // 第二个是专辑名
-				log.Printf("Song[%d] Parsed album from NasUrlPath: %s", i, parts[1])
-			} else {
-				log.Printf("Song[%d] NasUrlPath parsing failed, parts=%v", i, parts)
 			}
 		}
-		log.Printf("Song[%d] Final album: '%s'", i, songs[i].Album)
 	}
 
 	// 填充歌手名（当前歌手）
@@ -365,15 +365,11 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 		}
 	}
 
-	// 按专辑名分组（使用专辑名作为key，而不是albumId）
+	// 按专辑名分组
 	albumMap := make(map[string]*AlbumWithSongs)
-
-	log.Printf("SongOfSingerId: Starting grouping, total songs=%d", len(songs))
 	for i := range songs {
 		song := songs[i]
-		// 使用专辑名作为分组key，如果为空则用"未知专辑"
 		albumName := song.Album
-		log.Printf("SongOfSingerId: Processing song[%d]: name=%s, albumName='%s'", i, song.Name, albumName)
 		if albumName == "" {
 			albumName = "未知专辑"
 		}
@@ -388,10 +384,8 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 				Album:   albumName,
 				Songs:   []models.Song{},
 			}
-			log.Printf("SongOfSingerId: Created new album group: '%s'", albumName)
 		}
 		albumMap[albumName].Songs = append(albumMap[albumName].Songs, song)
-		log.Printf("SongOfSingerId: Added song to album '%s', current count=%d", albumName, len(albumMap[albumName].Songs))
 	}
 
 	// 从 map 转换为 slice，并按 album_id 排序
@@ -403,8 +397,6 @@ func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].AlbumId > result[j].AlbumId
 	})
-
-	log.Printf("SongOfSingerId: Final result: %d albums", len(result))
 
 	return common.SuccessWithData("获取成功", result)
 }
@@ -430,5 +422,24 @@ func (s *SongService) AllSong() *common.Response {
 	for i := range songs {
 		songs[i].Url = s.calculateBestUrl(&songs[i])
 	}
+	return common.SuccessWithData("获取成功", songs)
+}
+
+// SongsByAlbumId 查询专辑的所有歌曲
+func (s *SongService) SongsByAlbumId(albumId uint) *common.Response {
+	songs, err := s.songMapper.FindByAlbumId(albumId)
+	if err != nil {
+		return common.Error("获取失败")
+	}
+
+	// 查询专辑信息
+	album, err := s.albumMapper.FindById(albumId)
+	if err == nil && album != nil {
+		for i := range songs {
+			songs[i].Album = album.Name
+			songs[i].Url = fmt.Sprintf("/song/%d", songs[i].ID)
+		}
+	}
+
 	return common.SuccessWithData("获取成功", songs)
 }
