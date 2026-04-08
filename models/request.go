@@ -121,3 +121,116 @@ type ResetPasswordRequest struct {
 	Code     string `json:"code"`
 	Password string `json:"password"`
 }
+
+// ===== S3 文件夹管理请求 =====
+
+// CreateFolderRequest 创建文件夹
+type CreateFolderRequest struct {
+	Path string `json:"path"` // 文件夹路径，如 "music/album1/"
+}
+
+// DeleteFolderRequest 删除文件夹
+type DeleteFolderRequest struct {
+	Path      string `json:"path"`      // 文件夹路径
+	Recursive bool   `json:"recursive"` // 是否递归删除（包含文件）
+}
+
+// DeleteObjectRequest 删除文件
+type DeleteObjectRequest struct {
+	Key string `json:"key"` // 文件完整路径（key）
+}
+
+// CopyObjectRequest 复制文件
+type CopyObjectRequest struct {
+	SourceKey string `json:"source_key"` // 源文件路径
+	DestKey   string `json:"dest_key"`   // 目标文件路径
+}
+
+// BatchDeleteRequest 批量删除文件
+type BatchDeleteRequest struct {
+	Keys []string `json:"keys"` // 文件路径列表
+}
+
+// BatchCopyRequest 批量复制文件
+type BatchCopyRequest struct {
+	Items []CopyItem `json:"items"` // 复制项列表
+}
+
+// CopyItem 复制项
+type CopyItem struct {
+	SourceKey string `json:"source_key"` // 源文件路径
+	DestKey   string `json:"dest_key"`   // 目标文件路径
+}
+
+// BatchGetInfoRequest 批量获取文件信息
+type BatchGetInfoRequest struct {
+	Keys []string `json:"keys"` // 文件路径列表
+}
+
+// ===== S3 响应结构 =====
+
+// FolderInfo 文件夹信息
+type FolderInfo struct {
+	Path         string `json:"path"`          // 文件夹路径
+	Name         string `json:"name"`          // 文件夹名称
+	FileCount    int64  `json:"file_count"`    // 文件数量
+	TotalSize    int64  `json:"total_size"`    // 总大小（字节）
+	LastModified string `json:"last_modified"` // 最后修改时间
+}
+
+// ObjectInfo 文件对象信息
+type ObjectInfo struct {
+	Key          string `json:"key"`           // 完整路径
+	Name         string `json:"name"`          // 文件名
+	Size         int64  `json:"size"`          // 文件大小
+	ContentType  string `json:"content_type"`  // MIME 类型
+	LastModified string `json:"last_modified"` // 最后修改时间
+	ETag         string `json:"etag"`          // ETag（MD5）
+	URL          string `json:"url"`           // 访问 URL（临时签名 URL）
+}
+
+// ListFoldersResponse 文件夹列表响应
+type ListFoldersResponse struct {
+	Folders []FolderInfo `json:"folders"`
+	Total   int          `json:"total"`
+}
+
+// ListObjectsResponse 文件列表响应
+type ListObjectsResponse struct {
+	Objects []ObjectInfo `json:"objects"`
+	Total   int          `json:"total"`
+}
+
+// UploadFileResponse 上传文件响应
+type UploadFileResponse struct {
+	Key  string `json:"key"`  // 文件路径
+	URL  string `json:"url"`  // 访问 URL
+	Size int64  `json:"size"` // 文件大小
+}
+
+// BatchDeleteResponse 批量删除响应
+type BatchDeleteResponse struct {
+	Deleted []string `json:"deleted"` // 成功删除的文件
+	Failed  []string `json:"failed"`  // 删除失败的文件
+	Total   int      `json:"total"`   // 总数
+}
+
+// BatchCopyResponse 批量复制响应
+type BatchCopyResponse struct {
+	Copied []CopyResult `json:"copied"` // 成功复制的文件
+	Failed []string     `json:"failed"` // 复制失败的文件
+	Total  int          `json:"total"`  // 总数
+}
+
+// CopyResult 复制结果
+type CopyResult struct {
+	SourceKey string `json:"source_key"`
+	DestKey   string `json:"dest_key"`
+	URL       string `json:"url"`
+}
+
+// BatchGetInfoResponse 批量获取文件信息响应
+type BatchGetInfoResponse struct {
+	Objects []ObjectInfo `json:"objects"`
+	Total   int          `json:"total"`
+}

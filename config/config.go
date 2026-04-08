@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseTest  DatabaseTestConfig  `yaml:"database_test"`
 	Redis         RedisConfig         `yaml:"redis"`
 	Minio         MinioConfig         `yaml:"minio"`
+	AWS           AWSConfig           `yaml:"aws"`
 	Mail          MailConfig          `yaml:"mail"`
 }
 
@@ -48,6 +49,14 @@ type MinioConfig struct {
 	AccessKey string `yaml:"access-key"`
 	SecretKey string `yaml:"secret-key"`
 	Bucket    string `yaml:"bucket-name"`
+}
+
+type AWSConfig struct {
+	Region          string `yaml:"region"`
+	AccessKeyID     string `yaml:"access-key-id"`
+	SecretAccessKey string `yaml:"secret-access-key"`
+	Bucket          string `yaml:"bucket"`
+	Endpoint        string `yaml:"endpoint"`
 }
 
 type MailConfig struct {

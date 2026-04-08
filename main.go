@@ -9,6 +9,7 @@ import (
 	"study-music-server-go/config"
 	"study-music-server-go/mapper"
 	"study-music-server-go/routes"
+	"study-music-server-go/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,11 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	fmt.Println("Database connected successfully")
+
+	// Initialize S3 client
+	if err := utils.InitS3Client(); err != nil {
+		log.Printf("Warning: S3 client initialization failed: %v", err)
+	}
 
 	// Create Gin router
 	r := gin.Default()
