@@ -1,13 +1,13 @@
 package service
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"errors"
 	"study-music-server-go/common"
 	"study-music-server-go/mapper"
 	"study-music-server-go/models"
 	"study-music-server-go/utils"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ConsumerService struct {
@@ -27,24 +27,25 @@ func (s *ConsumerService) AddUser(req *models.ConsumerRequest) *common.Response 
 		return common.Warning("用户名已存在")
 	}
 
-	// Hash password
-	h := md5.New()
-	h.Write([]byte(req.Password + common.SALT))
-	password := hex.EncodeToString(h.Sum(nil))
-
-	consumer := &models.Consumer{
-		Username:    req.Username,
-		Password:    password,
-		Sex:         req.Sex,
-		PhoneNum:    req.PhoneNum,
-		Email:       req.Email,
-		Birth:       req.Birth,
-		Introduction: req.Introduction,
-		Location:    req.Location,
-		Avator:      req.Avator,
+	// Hash password with bcrypt
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return common.Error("密码加密失败")
 	}
 
-	err := s.consumerMapper.Add(consumer)
+	consumer := &models.Consumer{
+		Username:     req.Username,
+		Password:     string(hash),
+		Sex:          req.Sex,
+		PhoneNum:     req.PhoneNum,
+		Email:        req.Email,
+		Birth:        req.Birth,
+		Introduction: req.Introduction,
+		Location:     req.Location,
+		Avator:       req.Avator,
+	}
+
+	err = s.consumerMapper.Add(consumer)
 	if err != nil {
 		return common.Error("注册失败")
 	}
@@ -57,12 +58,9 @@ func (s *ConsumerService) LoginStatus(req *models.ConsumerRequest) *common.Respo
 		return common.Error("用户名或密码错误")
 	}
 
-	// Verify password
-	h := md5.New()
-	h.Write([]byte(req.Password + common.SALT))
-	password := hex.EncodeToString(h.Sum(nil))
-
-	if consumer.Password != password {
+	// Verify password with bcrypt
+	err = bcrypt.CompareHashAndPassword([]byte(consumer.Password), []byte(req.Password))
+	if err != nil {
 		return common.Error("用户名或密码错误")
 	}
 
@@ -75,12 +73,9 @@ func (s *ConsumerService) LoginEmailStatus(req *models.ConsumerRequest) *common.
 		return common.Error("邮箱或密码错误")
 	}
 
-	// Verify password
-	h := md5.New()
-	h.Write([]byte(req.Password + common.SALT))
-	password := hex.EncodeToString(h.Sum(nil))
-
-	if consumer.Password != password {
+	// Verify password with bcrypt
+	err = bcrypt.CompareHashAndPassword([]byte(consumer.Password), []byte(req.Password))
+	if err != nil {
 		return common.Error("邮箱或密码错误")
 	}
 
@@ -138,21 +133,19 @@ func (s *ConsumerService) UpdatePassword(req *models.ConsumerRequest) *common.Re
 		return common.Error("用户不存在")
 	}
 
-	// Verify old password
-	h := md5.New()
-	h.Write([]byte(req.OldPassword + common.SALT))
-	oldPassword := hex.EncodeToString(h.Sum(nil))
-
-	if consumer.Password != oldPassword {
+	// Verify old password with bcrypt
+	err = bcrypt.CompareHashAndPassword([]byte(consumer.Password), []byte(req.OldPassword))
+	if err != nil {
 		return common.Error("原密码错误")
 	}
 
-	// Update password
-	h.Reset()
-	h.Write([]byte(req.Password + common.SALT))
-	newPassword := hex.EncodeToString(h.Sum(nil))
+	// Hash new password with bcrypt
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return common.Error("密码加密失败")
+	}
 
-	err = s.consumerMapper.UpdatePassword(req.ID, newPassword)
+	err = s.consumerMapper.UpdatePassword(req.ID, string(hash))
 	if err != nil {
 		return common.Error("密码更新失败")
 	}
@@ -160,15 +153,17 @@ func (s *ConsumerService) UpdatePassword(req *models.ConsumerRequest) *common.Re
 }
 
 func (s *ConsumerService) UpdatePasswordByEmail(email, password string) error {
-	h := md5.New()
-	h.Write([]byte(password + common.SALT))
-	pwd := hex.EncodeToString(h.Sum(nil))
+	// Hash password with bcrypt
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 
 	consumer, err := s.consumerMapper.FindByEmail(email)
 	if err != nil {
 		return errors.New("用户不存在")
 	}
-	return s.consumerMapper.UpdatePassword(consumer.ID, pwd)
+	return s.consumerMapper.UpdatePassword(consumer.ID, string(hash))
 }
 
 func (s *ConsumerService) UpdateUserAvator(filePath string, id uint) *common.Response {

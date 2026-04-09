@@ -15,5 +15,4 @@ var (
 	SONG_PATH           = "/song/"
 	SINGER_PIC_PATH     = "/img/singerPic/"
 	BANNER_PIC_PATH     = "/img/swiper/"
-	SALT                = "zyt"
 )

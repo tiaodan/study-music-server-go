@@ -76,6 +76,7 @@ func SetupRoutes(r *gin.Engine) {
 	// Admin routes
 	adminCtrl := controller.NewAdminController()
 	r.POST("/admin/login", adminCtrl.Login)
+	r.GET("/admin/login/status", adminCtrl.LoginStatus)
 
 	// ListSong routes
 	listSongCtrl := controller.NewListSongController()
