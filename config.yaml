@@ -29,9 +29,9 @@ minio:
 
 aws:
   region: ap-northeast-1
-  access-key-id: YOUR_ACCESS_KEY
-  secret-access-key: YOUR_SECRET_KEY
-  bucket: your-bucket-name
+  access-key-id: no
+  secret-access-key: no
+  bucket: my-music-res-tokyo
   endpoint: ""
 
 mail:

@@ -100,16 +100,16 @@ func SetupRoutes(r *gin.Engine) {
 	s3Ctrl := controller.NewS3Controller()
 	r.GET("/s3/folders", s3Ctrl.ListFolders)               // 列出文件夹列表
 	r.POST("/s3/folder", s3Ctrl.CreateFolder)              // 创建文件夹
-	r.DELETE("/s3/folder", s3Ctrl.DeleteFolder)            // 删除文件夹
+	// r.DELETE("/s3/folder", s3Ctrl.DeleteFolder)         // 删除文件夹（已禁用，防止误操作）
 	r.GET("/s3/folder/info", s3Ctrl.GetFolderInfo)         // 获取文件夹详情
 	r.GET("/s3/objects", s3Ctrl.ListObjects)               // 列出文件夹内文件
 	r.POST("/s3/upload", s3Ctrl.UploadFile)                // 上传文件
 	r.GET("/s3/object/info", s3Ctrl.GetObjectInfo)         // 获取文件详情
 	r.GET("/s3/object/download", s3Ctrl.DownloadObject)    // 获取文件下载链接
 	r.POST("/s3/object/copy", s3Ctrl.CopyObject)           // 复制文件
-	r.DELETE("/s3/object", s3Ctrl.DeleteObject)            // 删除文件
+	// r.DELETE("/s3/object", s3Ctrl.DeleteObject)          // 删除文件（已禁用，防止误操作）
 	// 批量操作
 	r.POST("/s3/objects/batch/info", s3Ctrl.BatchGetObjectsInfo)  // 批量获取文件信息
 	r.POST("/s3/objects/batch/copy", s3Ctrl.BatchCopyObjects)     // 批量复制文件
-	r.DELETE("/s3/objects/batch", s3Ctrl.BatchDeleteObjects)      // 批量删除文件
+	// r.DELETE("/s3/objects/batch", s3Ctrl.BatchDeleteObjects)  // 批量删除文件（已禁用，防止误操作）
 }

@@ -70,7 +70,7 @@ func (s *S3Service) ListFolders(prefix string) *common.Response {
 	})
 }
 
-// CreateFolder 创建文件夹
+// CreateFolder 创建文件夹（支持递归创建，如 a/b/c/）
 func (s *S3Service) CreateFolder(path string) *common.Response {
 	if !utils.IsS3Enabled() {
 		return common.Error("S3 服务未启用")
@@ -82,17 +82,9 @@ func (s *S3Service) CreateFolder(path string) *common.Response {
 		path = path + "/"
 	}
 
-	// 检查是否已存在
-	exists, err := s.folderExists(path)
-	if err != nil {
-		return common.Error(fmt.Sprintf("检查文件夹失败: %v", err))
-	}
-	if exists {
-		return common.Error("文件夹已存在")
-	}
-
-	// 创建空对象（以 "/" 结尾的 key）
-	_, err = s.client.PutObject(context.TODO(), &s3.PutObjectInput{
+	// S3 是扁平结构，可以直接创建任意深度的路径
+	// 不需要检查父目录是否存在
+	_, err := s.client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(path),
 	})
