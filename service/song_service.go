@@ -14,20 +14,18 @@ import (
 )
 
 type SongService struct {
-	songMapper       *mapper.SongMapper
-	songSingerMapper *mapper.SongSingerMapper
-	singerMapper    *mapper.SingerMapper
-	albumMapper      *mapper.AlbumMapper
-	deviceMapper     *mapper.DeviceMapper
+	songMapper    *mapper.SongMapper
+	singerMapper  *mapper.SingerMapper
+	albumMapper   *mapper.AlbumMapper
+	deviceMapper  *mapper.DeviceMapper
 }
 
 func NewSongService() *SongService {
 	return &SongService{
-		songMapper:       mapper.NewSongMapper(),
-		songSingerMapper: mapper.NewSongSingerMapper(),
-		singerMapper:    mapper.NewSingerMapper(),
-		albumMapper:      mapper.NewAlbumMapper(),
-		deviceMapper:     mapper.NewDeviceMapper(),
+		songMapper:   mapper.NewSongMapper(),
+		singerMapper: mapper.NewSingerMapper(),
+		albumMapper:  mapper.NewAlbumMapper(),
+		deviceMapper: mapper.NewDeviceMapper(),
 	}
 }
 
@@ -217,15 +215,6 @@ func (s *SongService) AddSong(req *models.SongRequest) *common.Response {
 		return common.Error("添加歌曲失败")
 	}
 
-	// 如果请求中指定了 SingerId，插入中间表关联
-	if req.SingerId > 0 {
-		songSinger := &models.SongSinger{
-			SongId:   song.ID,
-			SingerId: req.SingerId,
-		}
-		s.songSingerMapper.Add(songSinger)
-	}
-
 	return common.SuccessWithData("添加成功", song)
 }
 
@@ -298,27 +287,15 @@ type AlbumWithSongs struct {
 }
 
 func (s *SongService) SongOfSingerId(singerId uint) *common.Response {
-	// 通过中间表查询该歌手的所有歌曲
-	songSingers, err := s.songSingerMapper.FindBySingerId(singerId)
-	if err != nil {
-		return common.Error("获取失败")
-	}
-
-	// 提取 song_id 列表
-	var songIds []uint
-	for _, ss := range songSingers {
-		songIds = append(songIds, ss.SongId)
-	}
-
-	if len(songIds) == 0 {
-		return common.SuccessWithData("获取成功", []AlbumWithSongs{})
-	}
-
-	// 查询歌曲详情
+	// 直接通过 singer_id 查询该歌手的所有歌曲
 	var songs []models.Song
-	err = mapper.DB.Where("id IN ?", songIds).Order("id").Find(&songs).Error
+	err := mapper.DB.Where("singer_id = ?", singerId).Order("id").Find(&songs).Error
 	if err != nil {
 		return common.Error("获取失败")
+	}
+
+	if len(songs) == 0 {
+		return common.SuccessWithData("获取成功", []AlbumWithSongs{})
 	}
 
 	// 批量查询专辑（优化：避免N+1查询）

@@ -7,18 +7,16 @@ import (
 )
 
 type SingerService struct {
-	singerMapper     *mapper.SingerMapper
-	songSingerMapper *mapper.SongSingerMapper
-	albumMapper      *mapper.AlbumMapper
-	songMapper       *mapper.SongMapper
+	singerMapper *mapper.SingerMapper
+	albumMapper  *mapper.AlbumMapper
+	songMapper   *mapper.SongMapper
 }
 
 func NewSingerService() *SingerService {
 	return &SingerService{
-		singerMapper:     mapper.NewSingerMapper(),
-		songSingerMapper: mapper.NewSongSingerMapper(),
-		albumMapper:      mapper.NewAlbumMapper(),
-		songMapper:       mapper.NewSongMapper(),
+		singerMapper: mapper.NewSingerMapper(),
+		albumMapper:  mapper.NewAlbumMapper(),
+		songMapper:   mapper.NewSongMapper(),
 	}
 }
 
@@ -57,15 +55,13 @@ func (s *SingerService) UpdateSinger(req *models.SingerRequest) *common.Response
 }
 
 func (s *SingerService) DeleteSinger(id uint) *common.Response {
-	// 检查是否有歌曲关联（通过中间表）
-	songSingers, err := s.songSingerMapper.FindBySingerId(id)
-	if err != nil {
-		return common.Error("检查歌曲关联失败")
-	}
-	if len(songSingers) > 0 {
+	// 检查是否有歌曲关联（直接查 song 表的 singer_id）
+	var count int64
+	mapper.DB.Model(&models.Song{}).Where("singer_id = ?", id).Count(&count)
+	if count > 0 {
 		return common.Error("该歌手下有歌曲，无法删除")
 	}
-	err = s.singerMapper.Delete(id)
+	err := s.singerMapper.Delete(id)
 	if err != nil {
 		return common.Error("删除失败")
 	}

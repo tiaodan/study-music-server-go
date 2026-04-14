@@ -18,10 +18,9 @@ import (
 )
 
 type ImportService struct {
-	singerMapper     *mapper.SingerMapper
-	albumMapper      *mapper.AlbumMapper
-	songMapper       *mapper.SongMapper
-	songSingerMapper *mapper.SongSingerMapper
+	singerMapper *mapper.SingerMapper
+	albumMapper  *mapper.AlbumMapper
+	songMapper   *mapper.SongMapper
 }
 
 // readLrcFile 读取 lrc 文件，自动检测并转换编码（GBK -> UTF-8）
@@ -73,10 +72,9 @@ func cleanLrcContent(lyric string) string {
 
 func NewImportService() *ImportService {
 	return &ImportService{
-		singerMapper:     mapper.NewSingerMapper(),
-		albumMapper:      mapper.NewAlbumMapper(),
-		songMapper:       mapper.NewSongMapper(),
-		songSingerMapper: mapper.NewSongSingerMapper(),
+		singerMapper: mapper.NewSingerMapper(),
+		albumMapper:  mapper.NewAlbumMapper(),
+		songMapper:   mapper.NewSongMapper(),
 	}
 }
 
@@ -675,14 +673,16 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 		}
 		nasUrl := fmt.Sprintf("%s/%s/%s", firstSinger, albumName, file.OriginalName)
 
-		// 只在多人时存储歌手名，单人则为空
+		// 只在多人时存储所有歌手名，单人则为空
 		var fullNameSinger string
 		if len(singerNames) > 1 {
-			fullNameSinger = singerName
+			fullNameSinger = strings.Join(singerNames, "、") // 所有歌手用顿号连接
 		}
 
-		// 插入歌曲
+		// 插入歌曲（主歌手取第一个歌手）
+		mainSingerId := singerIds[0]
 		song := &models.Song{
+			SingerId:       &mainSingerId,              // 主歌手ID（冗余列）
 			Name:           songName, // 歌曲名不包含扩展名
 			AlbumId:        albumId,
 			NasUrlPath:     nasUrl,
@@ -693,18 +693,6 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 		if err != nil {
 			failed = append(failed, fmt.Sprintf("插入歌曲失败: %s - %v", songName, err))
 			continue
-		}
-
-		// 插入歌曲歌手关联
-		for _, singerId := range singerIds {
-			songSinger := &models.SongSinger{
-				SongId:   song.ID,
-				SingerId: singerId,
-			}
-			err = s.songSingerMapper.Add(songSinger)
-			if err != nil {
-				fmt.Printf("插入歌曲歌手关联失败: %v\n", err)
-			}
 		}
 
 		// 读取同名lrc文件作为歌词

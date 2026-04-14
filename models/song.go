@@ -6,8 +6,9 @@ import (
 
 type Song struct {
 	ID             uint       `gorm:"primaryKey;autoIncrement" json:"id"`
-	AlbumId        *uint      `gorm:"index:idx_album_id;uniqueIndex:idx_album_name" json:"album_id"`
-	Name           string     `gorm:"size:100;not null;uniqueIndex:idx_album_name" json:"name"`
+	SingerId       *uint      `gorm:"uniqueIndex:idx_singer_album_name" json:"singer_id"`    // 歌手ID（冗余列，方便查询）
+	AlbumId        *uint      `gorm:"uniqueIndex:idx_singer_album_name" json:"album_id"`
+	Name           string     `gorm:"size:100;not null;uniqueIndex:idx_singer_album_name" json:"name"`
 	FullNameSinger string     `gorm:"size:255" json:"full_name_singer"`   // 多歌手时存储，单人则为空
 	Introduction   string     `gorm:"size:255" json:"introduction"`
 	Duration       int        `gorm:"default:0" json:"duration"`          // 歌曲时长（秒）
@@ -21,6 +22,7 @@ type Song struct {
 	AwsUrl         string     `gorm:"size:500" json:"-"`       // AWS真实链接
 	AwsUrlTemp     string     `gorm:"size:500" json:"-"`        // AWS临时链接
 	IsHot          bool       `gorm:"default:false" json:"is_hot"` // 是否热门（用于vultr优先）
+	UploadAwsStatus int       `gorm:"default:0" json:"upload_aws_status"` // AWS上传状态：0-未上传 1-已上传 2-失败
 
 	// 计算字段，不存储到数据库
 	Url       string `gorm:"-" json:"url"`       // 最优可用URL

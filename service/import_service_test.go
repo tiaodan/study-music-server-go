@@ -57,7 +57,6 @@ func initTestDB() error {
 		&models.Singer{},
 		&models.Album{},
 		&models.Song{},
-		&models.SongSinger{},
 	)
 	if err != nil {
 		return err
@@ -68,7 +67,6 @@ func initTestDB() error {
 
 func cleanTestData() {
 	// 清理测试数据
-	testDB.Exec("DELETE FROM song_singer")
 	testDB.Exec("DELETE FROM song")
 	testDB.Exec("DELETE FROM album")
 	testDB.Exec("DELETE FROM singer")
@@ -168,22 +166,6 @@ func TestImportSongs_ImportToDB(t *testing.T) {
 	t.Logf("专辑数量: %d", len(albums))
 	for _, a := range albums {
 		t.Logf("专辑: %s, singer_id: %d", a.Name, a.SingerId)
-	}
-
-	// 4. 验证 song_singer 对应关系
-	var songSingers []models.SongSinger
-	testDB.Find(&songSingers)
-	t.Logf("song_singer关系数量: %d", len(songSingers))
-
-	// 验证合唱歌曲的对应关系
-	var chorusSong models.Song
-	testDB.Where("name LIKE ?", "%合唱歌曲%").First(&chorusSong)
-	if chorusSong.ID > 0 {
-		var chorusRelations []models.SongSinger
-		testDB.Where("song_id = ?", chorusSong.ID).Find(&chorusRelations)
-		if len(chorusRelations) != 2 {
-			t.Errorf("合唱歌曲的歌手关系数量不对: 期望2, 实际%d", len(chorusRelations))
-		}
 	}
 
 	t.Logf("测试通过！共导入 %d 首歌曲", len(songs))
