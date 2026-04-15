@@ -47,6 +47,22 @@ func (*SongMapper) FindByName(name string) ([]models.Song, error) {
 	return songs, err
 }
 
+// FindBySingerIdAlbumIdName 精确查找：歌手+专辑+歌曲名
+func (*SongMapper) FindBySingerIdAlbumIdName(singerId uint, albumId *uint, name string) (*models.Song, error) {
+	var song models.Song
+	query := DB.Where("singer_id = ? AND name = ?", singerId, name)
+	if albumId != nil {
+		query = query.Where("album_id = ?", *albumId)
+	} else {
+		query = query.Where("album_id IS NULL")
+	}
+	err := query.First(&song).Error
+	if err != nil {
+		return nil, err
+	}
+	return &song, nil
+}
+
 func (*SongMapper) Update(song *models.Song) error {
 	return DB.Save(song).Error
 }

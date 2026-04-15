@@ -700,14 +700,14 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 		fmt.Printf("检查歌词文件: %s\n", lrcPath)
 		if lrcContent, err := readLrcFile(lrcPath); err == nil {
 			fmt.Printf("找到歌词文件: %s, 大小: %d bytes\n", lrcPath, len(lrcContent))
-			// 找到歌曲，更新歌词
-			foundSong, err := s.songMapper.FindByName(song.Name)
-			if err == nil && len(foundSong) > 0 {
-				foundSong[0].Lyric = string(lrcContent)
-				s.songMapper.Update(&foundSong[0])
-				fmt.Printf("歌词已更新到歌曲: %s\n", song.Name)
+			// 用 singer_id + album_id + name 精确查找刚创建的歌曲
+			foundSong, err := s.songMapper.FindBySingerIdAlbumIdName(mainSingerId, albumId, song.Name)
+			if err == nil && foundSong != nil {
+				foundSong.Lyric = string(lrcContent)
+				s.songMapper.Update(foundSong)
+				fmt.Printf("歌词已更新到歌曲: %s (id=%d)\n", song.Name, foundSong.ID)
 			} else {
-				fmt.Printf("未找到歌曲: %s, err: %v\n", song.Name, err)
+				fmt.Printf("未找到歌曲: %s, singer_id=%d, album_id=%v, err: %v\n", song.Name, mainSingerId, albumId, err)
 			}
 		} else {
 			fmt.Printf("未找到歌词文件: %s, err: %v\n", lrcPath, err)
