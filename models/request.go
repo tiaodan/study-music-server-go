@@ -27,6 +27,23 @@ type SingerRequest struct {
 	Introduction string   `json:"introduction"`
 }
 
+type SingerRankRequest struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Sex         int    `json:"sex"`
+	Pic         string `json:"pic"`
+	Birth       string `json:"birth"`
+	Location    string `json:"location"`
+	Introduction string `json:"introduction"`
+}
+
+type AlbumRankRequest struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	SingerId uint   `json:"singer_id"`
+	Pic      string `json:"pic"`
+}
+
 type SongRequest struct {
 	ID             uint   `json:"id"`
 	SingerId       uint   `json:"singer_id"`           // 保留用于兼容

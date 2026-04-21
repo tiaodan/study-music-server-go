@@ -44,6 +44,8 @@ func InitDB() error {
 	    &models.UserSupport{},
 	    &models.Device{},
 	    &models.Website{},
+	    &models.SingerRank{},
+	    &models.AlbumRank{},
 	    &models.SongRank{},
 	    &models.Rank{},
 	)

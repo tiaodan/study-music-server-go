@@ -77,6 +77,24 @@ func SetupRoutes(r *gin.Engine) {
 	websiteCtrl := controller.NewWebsiteController()
 	r.GET("/website", websiteCtrl.AllWebsite)
 
+	// SingerRank routes - 排行榜歌手
+	singerRankCtrl := controller.NewSingerRankController()
+	r.GET("/singer-rank", singerRankCtrl.AllSinger)
+	r.GET("/singer-rank/:id", singerRankCtrl.SingerOfId)
+	r.GET("/singer-rank/name/detail", singerRankCtrl.SingerOfName)
+	r.POST("/singer-rank/add", singerRankCtrl.AddSinger)
+	r.POST("/singer-rank/update", singerRankCtrl.UpdateSinger)
+	r.GET("/singer-rank/delete", singerRankCtrl.DeleteSinger)
+
+	// AlbumRank routes - 排行榜专辑
+	albumRankCtrl := controller.NewAlbumRankController()
+	r.GET("/album-rank", albumRankCtrl.AllAlbum)
+	r.GET("/album-rank/:id", albumRankCtrl.AlbumOfId)
+	r.GET("/album-rank/singer/detail", albumRankCtrl.AlbumsOfSingerId)
+	r.POST("/album-rank/add", albumRankCtrl.AddAlbum)
+	r.POST("/album-rank/update", albumRankCtrl.UpdateAlbum)
+	r.GET("/album-rank/delete", albumRankCtrl.DeleteAlbum)
+
 	// Admin routes
 	adminCtrl := controller.NewAdminController()
 	r.POST("/admin/login", adminCtrl.Login)
