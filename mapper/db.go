@@ -43,10 +43,16 @@ func InitDB() error {
 	    &models.ListSong{},
 	    &models.UserSupport{},
 	    &models.Device{},
+	    &models.Website{},
+	    &models.SongRank{},
+	    &models.Rank{},
 	)
 
 	// 自动修复字符集问题
 	fixCharset()
+
+	// 初始化 website 预设数据
+	initWebsiteData()
 
 	return nil
 }
@@ -66,4 +72,19 @@ func fixCharset() {
 	DB.Exec("ALTER TABLE album MODIFY name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
 
 	log.Println("数据库字符集已修复为 utf8mb4")
+}
+
+// initWebsiteData 初始化 website 预设数据
+func initWebsiteData() {
+	websites := []models.Website{
+		{Name: "QQ音乐", Type: "music"},
+		{Name: "酷狗音乐", Type: "music"},
+		{Name: "酷我音乐", Type: "music"},
+		{Name: "网易云音乐", Type: "music"},
+		{Name: "咪咕音乐", Type: "music"},
+	}
+	for _, w := range websites {
+		DB.FirstOrCreate(&w, models.Website{Name: w.Name, Type: w.Type})
+	}
+	log.Println("Website预设数据已初始化")
 }

@@ -73,6 +73,10 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/banner", bannerCtrl.AllBanner)
 	r.GET("/banner/getAllBanner", bannerCtrl.AllBanner) // 兼容旧路径
 
+	// Website routes
+	websiteCtrl := controller.NewWebsiteController()
+	r.GET("/website", websiteCtrl.AllWebsite)
+
 	// Admin routes
 	adminCtrl := controller.NewAdminController()
 	r.POST("/admin/login", adminCtrl.Login)

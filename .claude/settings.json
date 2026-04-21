@@ -1,6 +1,9 @@
 {
   "permissions": {
     "allow": [
+      "Bash(curl -s *)",
+      "Bash(netstat *)",
+      "Bash(sleep *)",
       "Bash(mysql -h localhost -P 3306 -u root -ppassword tp_music -e \"SHOW CREATE TABLE song\\\\G\")",
       "Bash(mysql -u root -ppassword -e \"SELECT name, singer_id, COUNT\\(*\\) as cnt FROM tp_music.album GROUP BY name, singer_id HAVING cnt > 1\")",
       "Bash(mysql -u root -ppassword -e \"SELECT name, COUNT\\(DISTINCT singer_id\\) as singer_count FROM tp_music.album GROUP BY name HAVING singer_count > 1\")",

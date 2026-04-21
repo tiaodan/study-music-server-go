@@ -587,17 +587,21 @@ func (s *ImportService) ImportSongs(path string) *common.Response {
 
 		// 处理多个歌手：优先使用路径中的主歌手，文件名中的其他歌手追加进来
 		var allSingerNames []string
+		// 标准化歌手名（去掉多余空格，便于比较）
+		normalizedMainSinger := strings.Join(strings.Fields(mainSingerName), " ")
 		// 先加主歌手
 		if mainSingerName != "" {
 			allSingerNames = append(allSingerNames, mainSingerName)
 		}
 		// 如果文件名中有歌手，且和主歌手不同，则追加
-		if fileSinger != "" && fileSinger != mainSingerName {
+		if fileSinger != "" {
 			// 分割文件中的多个歌手
 			fileSingers := strings.Split(fileSinger, "、")
 			for _, fs := range fileSingers {
 				fs = strings.TrimSpace(fs)
-				if fs != "" && fs != mainSingerName {
+				// 标准化后比较
+				normalizedFs := strings.Join(strings.Fields(fs), " ")
+				if fs != "" && normalizedFs != normalizedMainSinger {
 					allSingerNames = append(allSingerNames, fs)
 				}
 			}
