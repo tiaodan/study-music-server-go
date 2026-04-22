@@ -31,6 +31,15 @@ func (*AlbumRankMapper) FindBySingerId(singerId uint) ([]models.AlbumRank, error
 	return albums, err
 }
 
+func (*AlbumRankMapper) FindBySingerIdAndName(singerId uint, name string) (*models.AlbumRank, error) {
+	var album models.AlbumRank
+	err := DB.Where("singer_id = ? AND name = ?", singerId, name).First(&album).Error
+	if err != nil {
+		return nil, err
+	}
+	return &album, nil
+}
+
 func (*AlbumRankMapper) Add(album *models.AlbumRank) error {
 	return DB.Create(album).Error
 }

@@ -118,6 +118,12 @@ func SetupRoutes(r *gin.Engine) {
 	r.POST("/import/songs", importCtrl.ImportSongs)              // 规整进数据库
 	r.POST("/import/singer/albums", importCtrl.ImportSingerAlbums) // 一键导入-单歌手-所有专辑
 
+	// Rank routes - 排行榜导入
+	rankCtrl := controller.NewRankController()
+	r.POST("/rank/import", rankCtrl.ImportRank)   // 导入排行榜数据
+	r.GET("/rank/list", rankCtrl.GetRankList)    // 获取榜单列表
+	r.GET("/rank/detail", rankCtrl.GetRankDetail) // 获取榜单详情
+
 	// S3 routes - AWS S3 文件夹管理
 	s3Ctrl := controller.NewS3Controller()
 	r.GET("/s3/folders", s3Ctrl.ListFolders)               // 列出文件夹列表

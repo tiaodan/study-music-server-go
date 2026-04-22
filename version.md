@@ -136,6 +136,26 @@ song表加冗余列 songer_id 前提交
 ############# v0.2.24
 优化：生成一些表专门给 排行榜用
 
+############# v0.2.25
+优化：酷狗top100 能导入1部分，还有报错，待修复
+
+
+----------------------删除，给client实现后就删除
+
+文件	说明
+models/request.go	添加 RankImportRequest、RankSongItem（含 folderPath）
+models/rank.go	添加 album_id 字段
+mapper/rank_mapper.go	Rank Mapper
+mapper/song_rank_mapper.go	SongRank Mapper
+service/rank_service.go	核心逻辑：读取目录→匹配文件→入库
+controller/rank_controller.go	RankController
+routes/routes.go	添加路由
+接口：
+
+POST /rank/import - 导入排行榜数据
+GET /rank/list?websiteId=2 - 获取榜单列表
+GET /rank/detail?websiteId=2&rankName=top500 - 获取榜单详情
+----------------------删除
 
 
 

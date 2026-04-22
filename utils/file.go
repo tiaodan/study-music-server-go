@@ -88,11 +88,14 @@ func GetMusicFiles(dirPath string) ([]MusicFileInfo, error) {
 		}
 
 		ext := strings.ToLower(GetFileExt(info.Name()))
-		if ext == ".mp3" || ext == ".wav" || ext == ".lrc" {
+		if ext == ".mp3" || ext == ".wav" || ext == ".lrc" || ext == ".flac" || ext == ".m4a" || ext == ".ogg" || ext == ".aac" || ext == ".wma" || ext == ".ape" || ext == ".dts" {
+			singer, songName := ParseMusicFileName(info.Name())
 			files = append(files, MusicFileInfo{
 				OriginalName: info.Name(),
 				Path:         path,
 				Ext:          ext,
+				Singer:       singer,
+				SongName:     songName,
 			})
 		}
 		return nil

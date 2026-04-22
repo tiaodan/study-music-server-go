@@ -17,7 +17,7 @@ type SongRank struct {
 	UpdateTime     time.Time `gorm:"autoCreateTime;autoUpdateTime" json:"update_time"`
 	Pic            string    `gorm:"size:255" json:"pic"`
 	Lyric          string    `gorm:"type:text" json:"lyric"`
-	NasUrlPath     string    `gorm:"size:255" json:"nas_url_path"` // /rank开头+原path
+	NasUrlPath     string    `gorm:"size:255" json:"nas_url_path"`
 	SpiderUrl      string    `gorm:"size:500" json:"spider_url"`
 	SpiderUrlHttps string    `gorm:"size:500" json:"spider_url_https"`
 	AwsUrl         string    `gorm:"size:500" json:"aws_url"`

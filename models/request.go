@@ -251,3 +251,26 @@ type BatchGetInfoResponse struct {
 	Objects []ObjectInfo `json:"objects"`
 	Total   int          `json:"total"`
 }
+
+// ===== 排行榜导入请求 =====
+
+// RankImportRequest 排行榜导入请求
+type RankImportRequest struct {
+	WebsiteId  uint          `json:"websiteId"`  // 网站ID
+	RankName   string        `json:"rankName"`   // 榜单名，如 "top500"
+	FolderPath string        `json:"folderPath"` // 本地文件夹路径
+	List       []RankSongItem `json:"list"`       // 歌曲列表
+}
+
+// RankSongItem 排行榜歌曲项
+type RankSongItem struct {
+	Singer    string `json:"singer"`    // 歌手名（可能多个，用顿号分隔）
+	Name      string `json:"name"`      // 歌曲名
+	AlbumName string `json:"albumName"` // 专辑名
+	AlbumId   string `json:"albumId"`   // 专辑ID（第三方平台）
+	Songmid   uint64 `json:"songmid"`   // 歌曲ID（第三方平台）
+	Hash      string `json:"hash"`      // 文件hash
+	Interval  string `json:"interval"`  // 时长 "03:55"
+	Img       string `json:"img"`       // 封面URL
+	Lrc       string `json:"lrc"`       // 歌词URL
+}
