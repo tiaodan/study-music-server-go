@@ -63,11 +63,6 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/comment/song/detail", commentCtrl.CommentOfSongId)
 	r.GET("/comment/songList/detail", commentCtrl.CommentOfSongListId)
 
-	// RankList routes
-	rankListCtrl := controller.NewRankListController()
-	r.POST("/rankList/add", rankListCtrl.AddRankList)
-	r.GET("/rankList/detail", rankListCtrl.RankListOfSongListId)
-
 	// Banner routes
 	bannerCtrl := controller.NewBannerController()
 	r.GET("/banner", bannerCtrl.AllBanner)
@@ -120,6 +115,7 @@ func SetupRoutes(r *gin.Engine) {
 
 	// Rank routes - 排行榜导入
 	rankCtrl := controller.NewRankController()
+	r.POST("/rank/check", rankCtrl.CheckRank)    // 校验排行榜数据（不入库）
 	r.POST("/rank/import", rankCtrl.ImportRank)   // 导入排行榜数据
 	r.GET("/rank/list", rankCtrl.GetRankList)    // 获取榜单列表
 	r.GET("/rank/detail", rankCtrl.GetRankDetail) // 获取榜单详情

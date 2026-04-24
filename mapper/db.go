@@ -37,7 +37,6 @@ func InitDB() error {
 	    &models.SongList{},
 	    &models.Collect{},
 	    &models.Comment{},
-	    &models.RankList{},
 	    &models.Banner{},
 	    &models.Admin{},
 	    &models.ListSong{},

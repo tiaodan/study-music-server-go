@@ -64,6 +64,13 @@ func (*SongRankMapper) UpdateNasUrlPath(id uint, nasUrlPath string) error {
 	return DB.Model(&models.SongRank{}).Where("id = ?", id).Update("nas_url_path", nasUrlPath).Error
 }
 
+func (*SongRankMapper) UpdateNasUrlPathAndLyric(id uint, nasUrlPath string, lyric string) error {
+	return DB.Model(&models.SongRank{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"nas_url_path": nasUrlPath,
+		"lyric":        lyric,
+	}).Error
+}
+
 func (*SongRankMapper) Delete(id uint) error {
 	return DB.Delete(&models.SongRank{}, id).Error
 }

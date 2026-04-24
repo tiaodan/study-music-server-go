@@ -2,6 +2,8 @@ package mapper
 
 import (
 	"study-music-server-go/models"
+
+	"gorm.io/gorm/clause"
 )
 
 type AlbumRankMapper struct{}
@@ -41,7 +43,11 @@ func (*AlbumRankMapper) FindBySingerIdAndName(singerId uint, name string) (*mode
 }
 
 func (*AlbumRankMapper) Add(album *models.AlbumRank) error {
-	return DB.Create(album).Error
+	// UPSERT: 插入失败时更新（根据唯一索引 singer_id + name）
+	return DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "singer_id"}, {Name: "name"}},
+		DoUpdates: clause.AssignmentColumns([]string{"pic", "update_time"}),
+	}).Create(album).Error
 }
 
 func (*AlbumRankMapper) Update(album *models.AlbumRank) error {

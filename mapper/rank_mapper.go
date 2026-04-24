@@ -2,6 +2,8 @@ package mapper
 
 import (
 	"study-music-server-go/models"
+
+	"gorm.io/gorm/clause"
 )
 
 type RankMapper struct{}
@@ -27,7 +29,7 @@ func (*RankMapper) FindById(id uint) (*models.Rank, error) {
 
 func (*RankMapper) FindByWebsiteAndName(websiteId uint, name string) ([]models.Rank, error) {
 	var ranks []models.Rank
-	err := DB.Where("website_id = ? AND name = ?", websiteId, name).Order("id").Find(&ranks).Error
+	err := DB.Preload("SongDetail").Where("website_id = ? AND name = ?", websiteId, name).Order("id").Find(&ranks).Error
 	return ranks, err
 }
 
@@ -38,7 +40,11 @@ func (*RankMapper) FindByWebsiteId(websiteId uint) ([]models.Rank, error) {
 }
 
 func (*RankMapper) Add(rank *models.Rank) error {
-	return DB.Create(rank).Error
+	// UPSERT: 插入失败时更新（根据唯一索引 website_id + name + song_rank_id）
+	return DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "website_id"}, {Name: "name"}, {Name: "song_rank_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"update_time"}),
+	}).Create(rank).Error
 }
 
 func (*RankMapper) Update(rank *models.Rank) error {

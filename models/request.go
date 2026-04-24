@@ -107,13 +107,6 @@ type CommentRequest struct {
 	Type       *uint8 `json:"type"`
 }
 
-type RankListRequest struct {
-	ID         uint    `json:"id"`
-	SongListId uint    `json:"song_list_id"`
-	ConsumerId uint    `json:"consumer_id"`
-	Score      float64 `json:"score"`
-}
-
 type AdminRequest struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
@@ -273,4 +266,45 @@ type RankSongItem struct {
 	Interval  string `json:"interval"`  // 时长 "03:55"
 	Img       string `json:"img"`       // 封面URL
 	Lrc       string `json:"lrc"`       // 歌词URL
+}
+
+// RankCheckRequest 排行榜校验请求
+type RankCheckRequest struct {
+	WebsiteId  uint          `json:"websiteId"`  // 网站ID
+	RankName   string        `json:"rankName"`   // 榜单名
+	FolderPath string        `json:"folderPath"` // 本地文件夹路径
+	List       []RankSongItem `json:"list"`       // 歌曲列表
+}
+
+// RankCheckResult 排行榜校验结果
+type RankCheckResult struct {
+	TotalFromFrontend  int      `json:"totalFromFrontend"`  // 前端传入歌曲数量
+	TotalFromFolder    int      `json:"totalFromFolder"`    // 文件夹文件数量
+
+	// 前端有，文件夹缺少的
+	MissingFiles []MissingFileItem `json:"missingFiles"` // 缺少的文件
+
+	// 文件夹有，前端没有的（多余文件）
+	ExtraFiles []string `json:"extraFiles"` // 多余的文件名
+
+	// 匹配成功的
+	MatchedFiles []MatchedFileItem `json:"matchedFiles"` // 匹配成功的
+
+	// 是否可以入库
+	CanImport bool `json:"canImport"` // 是否可以入库（缺少文件数=0时可入库）
+}
+
+// MissingFileItem 缺少的文件项
+type MissingFileItem struct {
+	Singer string `json:"singer"` // 歌手
+	Name   string `json:"name"`   // 歌名
+	Key    string `json:"key"`    // 匹配key
+}
+
+// MatchedFileItem 匹配成功的文件项
+type MatchedFileItem struct {
+	Singer   string `json:"singer"`    // 歌手
+	Name     string `json:"name"`      // 歌名
+	FileName string `json:"fileName"`  // 文件名
+	Key      string `json:"key"`       // 匹配key
 }
