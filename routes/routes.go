@@ -29,6 +29,10 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/singer", singerCtrl.AllSinger)
 	r.GET("/singer/albums", singerCtrl.AlbumsOfSingerId) // 新增：查歌手专辑列表
 
+	// SongRank routes - 排行榜歌曲（直接返回音频流，和歌手歌曲逻辑一致）
+	songRankCtrl := controller.NewSongRankController()
+	r.GET("/song-rank/:id", songRankCtrl.SongOfId)
+
 	// Song routes
 	songCtrl := controller.NewSongController()
 	r.POST("/song/add", songCtrl.AddSong)

@@ -22,7 +22,7 @@ func (*SongRankMapper) Add(song *models.SongRank) error {
 
 func (*SongRankMapper) FindById(id uint) (*models.SongRank, error) {
 	var song models.SongRank
-	err := DB.First(&song, id).Error
+	err := DB.Preload("SingerInfo").Preload("AlbumInfo").First(&song, id).Error
 	if err != nil {
 		return nil, err
 	}

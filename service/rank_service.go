@@ -3,6 +3,9 @@ package service
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"study-music-server-go/common"
 	"study-music-server-go/mapper"
@@ -41,6 +44,20 @@ func (s *RankService) getWebsiteName(websiteId uint) string {
 		return name
 	}
 	return "unknown"
+}
+
+// parseInterval 解析时长字符串 "03:55" 返回秒数
+func parseInterval(interval string) int {
+	parts := strings.Split(interval, ":")
+	if len(parts) != 2 {
+		return 0
+	}
+	minutes, err1 := strconv.Atoi(strings.TrimSpace(parts[0]))
+	seconds, err2 := strconv.Atoi(strings.TrimSpace(parts[1]))
+	if err1 != nil || err2 != nil {
+		return 0
+	}
+	return minutes * 60 + seconds
 }
 
 // removeBrackets 去掉歌名中的括号及括号内容
@@ -107,6 +124,51 @@ func buildFilePathIndex(files []utils.MusicFileInfo) map[string]string {
 		}
 	}
 	return index
+}
+
+// removeFileSpaces 去除文件名中的空格（mp3, wav, lrc 文件）
+// 返回：重命名的文件数量，是否有错误
+func removeFileSpaces(folderPath string) (int, error) {
+	entries, err := os.ReadDir(folderPath)
+	if err != nil {
+		return 0, err
+	}
+
+	renamedCount := 0
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		originalName := entry.Name()
+		ext := strings.ToLower(filepath.Ext(originalName))
+
+		// 只处理 mp3, wav, lrc 文件
+		if ext != ".mp3" && ext != ".wav" && ext != ".lrc" {
+			continue
+		}
+
+		// 检查文件名是否有空格
+		if !strings.Contains(originalName, " ") {
+			continue
+		}
+
+		// 去掉空格
+		newName := strings.ReplaceAll(originalName, " ", "")
+		oldPath := filepath.Join(folderPath, originalName)
+		newPath := filepath.Join(folderPath, newName)
+
+		// 重命名
+		if err := os.Rename(oldPath, newPath); err != nil {
+			log.Printf("重命名失败: %s -> %s, err: %v", oldPath, newPath, err)
+			continue
+		}
+
+		renamedCount++
+		log.Printf("重命名成功: %s -> %s", originalName, newName)
+	}
+
+	return renamedCount, nil
 }
 
 // ImportRank 导入排行榜数据
@@ -198,6 +260,8 @@ func (s *RankService) ImportRank(req *models.RankImportRequest) *common.Response
 			NasUrlPath:     "",
 			Lyric:          "",
 			SpiderUrl:      "",
+			Duration:       parseInterval(item.Interval), // 从前端传入的时长
+			Pic:            item.Img,                     // 从前端传入的封面
 		}
 
 		if err := s.songRankMapper.Add(song); err != nil {
@@ -233,6 +297,14 @@ func (s *RankService) ImportRank(req *models.RankImportRequest) *common.Response
 	var lyricCount int
 
 	if folderPath != "" {
+		// 先处理文件名中的空格
+		renamedCount, err := removeFileSpaces(folderPath)
+		if err != nil {
+			log.Printf("处理文件名空格失败: %v", err)
+		} else if renamedCount > 0 {
+			log.Printf("重命名 %d 个文件（去除空格）", renamedCount)
+		}
+
 		files, err := utils.GetMusicFiles(folderPath)
 		if err != nil {
 			log.Printf("读取目录失败: %v", err)
@@ -272,7 +344,7 @@ func (s *RankService) ImportRank(req *models.RankImportRequest) *common.Response
 
 				if found {
 					songId := songInfo["song_id"].(uint)
-					nasUrlPath := fmt.Sprintf("/rank/%s/%s/%s", websiteName, req.RankName, fileName)
+					nasUrlPath := fmt.Sprintf("rank/%s/%s/%s", websiteName, req.RankName, fileName)
 
 					// 获取对应 mp3 文件的路径，查找 lrc 文件
 					mp3Path := filePathIndex[fileKey]
@@ -349,6 +421,24 @@ func (s *RankService) GetRankDetail(websiteId uint, rankName string) *common.Res
 	if err != nil {
 		return common.Error("获取失败")
 	}
+
+	// 填充 Singer 和 Album 计算字段
+	for i := range ranks {
+		if ranks[i].SongDetail != nil {
+			// 填充歌手名
+			if ranks[i].SongDetail.FullNameSinger != "" {
+				ranks[i].SongDetail.Singer = ranks[i].SongDetail.FullNameSinger
+			} else if ranks[i].SongDetail.SingerInfo != nil {
+				ranks[i].SongDetail.Singer = ranks[i].SongDetail.SingerInfo.Name
+			}
+
+			// 填充专辑名
+			if ranks[i].SongDetail.AlbumInfo != nil {
+				ranks[i].SongDetail.Album = ranks[i].SongDetail.AlbumInfo.Name
+			}
+		}
+	}
+
 	return common.SuccessWithData("获取成功", ranks)
 }
 

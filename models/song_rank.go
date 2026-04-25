@@ -25,6 +25,10 @@ type SongRank struct {
 	IsHot          bool      `gorm:"default:false" json:"is_hot"`
 	UploadAwsStatus int      `gorm:"default:0" json:"upload_aws_status"`
 
+	// 关联
+	SingerInfo *SingerRank `gorm:"foreignKey:SingerId" json:"singer_info,omitempty"`
+	AlbumInfo  *AlbumRank  `gorm:"foreignKey:AlbumId" json:"album_info,omitempty"`
+
 	// 计算字段
 	Url       string `gorm:"-" json:"url"`
 	UrlSource string `gorm:"-" json:"url_source"`

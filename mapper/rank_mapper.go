@@ -29,7 +29,10 @@ func (*RankMapper) FindById(id uint) (*models.Rank, error) {
 
 func (*RankMapper) FindByWebsiteAndName(websiteId uint, name string) ([]models.Rank, error) {
 	var ranks []models.Rank
-	err := DB.Preload("SongDetail").Where("website_id = ? AND name = ?", websiteId, name).Order("id").Find(&ranks).Error
+	err := DB.Preload("SongDetail").
+		Preload("SongDetail.SingerInfo").
+		Preload("SongDetail.AlbumInfo").
+		Where("website_id = ? AND name = ?", websiteId, name).Order("id").Find(&ranks).Error
 	return ranks, err
 }
 
