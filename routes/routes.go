@@ -27,6 +27,7 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/singer/detail", singerCtrl.SingerOfId)
 	r.GET("/singer/name/detail", singerCtrl.SingerOfName)
 	r.GET("/singer", singerCtrl.AllSinger)
+	r.GET("/singer/jay", singerCtrl.SingerJay) // 临时：只返回周杰伦
 	r.GET("/singer/albums", singerCtrl.AlbumsOfSingerId) // 新增：查歌手专辑列表
 
 	// SongRank routes - 排行榜歌曲（直接返回音频流，和歌手歌曲逻辑一致）

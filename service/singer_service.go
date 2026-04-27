@@ -92,6 +92,24 @@ func (s *SingerService) AllSinger() *common.Response {
 	return common.SuccessWithData("获取成功", singers)
 }
 
+// SingerJay 只返回周杰伦（临时测试用）
+func (s *SingerService) SingerJay() *common.Response {
+	singers, err := s.singerMapper.FindAllWithAlbums()
+	if err != nil {
+		return common.Error("获取失败")
+	}
+
+	// 筛选周杰伦
+	var filtered []models.Singer
+	for _, singer := range singers {
+		if singer.Name == "周杰伦" {
+			filtered = append(filtered, singer)
+		}
+	}
+
+	return common.SuccessWithData("获取成功", filtered)
+}
+
 // AlbumWithSongCount 专辑信息（含歌曲数量）
 type AlbumWithSongCount struct {
 	ID        uint   `json:"id"`

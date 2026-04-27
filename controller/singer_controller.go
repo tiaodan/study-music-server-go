@@ -72,6 +72,12 @@ func (c *SingerController) AllSinger(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
+// SingerJay 只返回周杰伦（临时测试用）
+func (c *SingerController) SingerJay(ctx *gin.Context) {
+	resp := c.singerService.SingerJay()
+	ctx.JSON(http.StatusOK, resp)
+}
+
 // AlbumsOfSingerId 查询歌手的所有专辑
 func (c *SingerController) AlbumsOfSingerId(ctx *gin.Context) {
 	idStr := ctx.Query("singerId")
