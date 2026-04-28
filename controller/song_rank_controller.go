@@ -2,6 +2,7 @@ package controller
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -24,6 +25,7 @@ func NewSongRankController() *SongRankController {
 // SongOfId 获取排行榜歌曲详情（或直接返回音频流）
 // GET /song-rank/:id
 func (c *SongRankController) SongOfId(ctx *gin.Context) {
+	log.Printf("[IP:%s] 请求播放排行榜歌曲 song-rank id=%s", ctx.ClientIP(), ctx.Param("id"))
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {

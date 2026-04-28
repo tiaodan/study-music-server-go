@@ -2,6 +2,7 @@ package controller
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -54,6 +55,8 @@ func (c *SongController) DeleteSong(ctx *gin.Context) {
 }
 
 func (c *SongController) SongOfId(ctx *gin.Context) {
+	log.Printf("[IP:%s] 请求播放歌曲 song id=%s", ctx.ClientIP(), ctx.Param("id"))
+
 	// 优先从 path 参数获取，其次从 query 参数获取
 	idStr := ctx.Param("id")
 	if idStr == "" {

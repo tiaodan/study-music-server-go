@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"study-music-server-go/models"
@@ -68,12 +69,14 @@ func (c *SingerController) SingerOfName(ctx *gin.Context) {
 }
 
 func (c *SingerController) AllSinger(ctx *gin.Context) {
+	log.Printf("[IP:%s] 请求歌手列表", ctx.ClientIP())
 	resp := c.singerService.AllSinger()
 	ctx.JSON(http.StatusOK, resp)
 }
 
 // SingerJay 只返回周杰伦（临时测试用）
 func (c *SingerController) SingerJay(ctx *gin.Context) {
+	log.Printf("[IP:%s] 请求歌手列表(jay)", ctx.ClientIP())
 	resp := c.singerService.SingerJay()
 	ctx.JSON(http.StatusOK, resp)
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"study-music-server-go/models"
@@ -38,6 +39,7 @@ func (c *RankController) ImportRank(ctx *gin.Context) {
 // GetRankList 获取榜单列表
 // GET /rank/list?websiteId=2
 func (c *RankController) GetRankList(ctx *gin.Context) {
+	log.Printf("[IP:%s] 请求榜单列表 websiteId=%s", ctx.ClientIP(), ctx.Query("websiteId"))
 	idStr := ctx.Query("websiteId")
 	websiteId, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
@@ -51,6 +53,7 @@ func (c *RankController) GetRankList(ctx *gin.Context) {
 // GetRankDetail 获取榜单详情
 // GET /rank/detail?websiteId=2&rankName=top500
 func (c *RankController) GetRankDetail(ctx *gin.Context) {
+	log.Printf("[IP:%s] 请求榜单详情 websiteId=%s rankName=%s", ctx.ClientIP(), ctx.Query("websiteId"), ctx.Query("rankName"))
 	websiteIdStr := ctx.Query("websiteId")
 	rankName := ctx.Query("rankName")
 	websiteId, err := strconv.ParseUint(websiteIdStr, 10, 32)
